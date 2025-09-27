@@ -15,19 +15,6 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    @auth
-                        <x-nav-link :href="route('pins.create')" :active="request()->routeIs('pins.create')">
-                            {{ __('Add Pin') }}
-                        </x-nav-link>
-                        <x-nav-link :href="route('pins.index')" :active="request()->routeIs('pins.index')">
-                            {{ __('View Pins') }}
-                        </x-nav-link>
-                    @endauth
-                    @guest
-                        <x-nav-link :href="route('login')">
-                            {{ __('Login') }}
-                        </x-nav-link>
-                    @endguest
                 </div>
             </div>
 
@@ -81,19 +68,6 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            @auth
-                <x-responsive-nav-link :href="route('pins.create')" :active="request()->routeIs('pins.create')">
-                    {{ __('Add Pin') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('pins.index')" :active="request()->routeIs('pins.index')">
-                    {{ __('View Pins') }}
-                </x-responsive-nav-link>
-            @endauth
-            @guest
-                <x-responsive-nav-link :href="route('login')">
-                    {{ __('Login') }}
-                </x-responsive-nav-link>
-            @endguest
         </div>
 
         <!-- Responsive Settings Options -->
