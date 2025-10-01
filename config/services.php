@@ -39,7 +39,8 @@ return [
         'base_url' => env('AUTHENTIK_BASE_URL'),
         'client_id' => env('AUTHENTIK_CLIENT_ID'),
         'client_secret' => env('AUTHENTIK_CLIENT_SECRET'),
-        'redirect' => env('AUTHENTIK_REDIRECT_URI')
+        'redirect' => env('AUTHENTIK_REDIRECT_URI'),
+        'api_token' => env('AUTHENTIK_API_TOKEN'),
     ],
 
 ];

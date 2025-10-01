@@ -21,6 +21,23 @@ class User extends Authenticatable
         'name',
         'email',
         'authentik_id',
+        'username',
+        'is_active',
+        'last_login',
+        'authentik_attributes',
         'avatar',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'is_active' => 'boolean',
+        'last_login' => 'datetime',
+        'authentik_attributes' => 'array',
+        'password' => 'hashed',
     ];
 }
