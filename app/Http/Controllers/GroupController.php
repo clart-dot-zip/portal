@@ -223,7 +223,10 @@ class GroupController extends Controller
     public function addUser(Request $request, $id)
     {
         if (!$this->authentik) {
-            return response()->json(['success' => false, 'message' => 'Authentik SDK is not available.'], 500);
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Authentik SDK is not available.'], 500);
+            }
+            return back()->with('error', 'Authentik SDK is not available.');
         }
 
         $request->validate([
@@ -233,7 +236,7 @@ class GroupController extends Controller
         try {
             $this->authentik->groups()->addUser($id, $request->user_id);
 
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'User added to group successfully!'
@@ -249,7 +252,7 @@ class GroupController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to add user to group: ' . $e->getMessage()
@@ -266,13 +269,16 @@ class GroupController extends Controller
     public function removeUser(Request $request, $id, $userId)
     {
         if (!$this->authentik) {
-            return response()->json(['success' => false, 'message' => 'Authentik SDK is not available.'], 500);
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Authentik SDK is not available.'], 500);
+            }
+            return back()->with('error', 'Authentik SDK is not available.');
         }
 
         try {
             $this->authentik->groups()->removeUser($id, $userId);
 
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'User removed from group successfully!'
@@ -288,7 +294,7 @@ class GroupController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to remove user from group: ' . $e->getMessage()

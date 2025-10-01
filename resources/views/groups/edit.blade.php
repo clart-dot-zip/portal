@@ -231,13 +231,19 @@
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'Accept': 'application/json',
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
                         },
                         body: JSON.stringify({
                             user_id: userId
                         })
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (data.success) {
                             showMessage(data.message, 'success');
@@ -271,14 +277,25 @@
                 return;
             }
 
-            fetch('{{ route("groups.remove-user", [$group["pk"], "__USER_ID__"]) }}'.replace('__USER_ID__', userId), {
+            // Build the URL manually to avoid Laravel route generation issues
+            const baseUrl = '{{ url("groups") }}';
+            const groupId = '{{ $group["pk"] }}';
+            const removeUrl = `${baseUrl}/${groupId}/users/${userId}`;
+
+            fetch(removeUrl, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     showMessage(data.message, 'success');

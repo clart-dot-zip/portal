@@ -90,9 +90,22 @@ class GroupManager extends BaseManager
      */
     public function addUser(string $groupId, string $userId): array
     {
-        return $this->client->post("/core/groups/{$groupId}/add_user", [
-            'user' => $userId
-        ]);
+        // Get current group details
+        $group = $this->get($groupId);
+        
+        // Get current users array
+        $currentUsers = $group['users'] ?? [];
+        
+        // Add user if not already in the group
+        if (!in_array($userId, $currentUsers)) {
+            $currentUsers[] = $userId;
+            
+            // Update the group with the new users array
+            return $this->patch($groupId, ['users' => $currentUsers]);
+        }
+        
+        // User already in group, return success
+        return ['message' => 'User already in group'];
     }
 
     /**
@@ -100,9 +113,22 @@ class GroupManager extends BaseManager
      */
     public function removeUser(string $groupId, string $userId): array
     {
-        return $this->client->post("/core/groups/{$groupId}/remove_user", [
-            'user' => $userId
-        ]);
+        // Get current group details
+        $group = $this->get($groupId);
+        
+        // Get current users array
+        $currentUsers = $group['users'] ?? [];
+        
+        // Remove user from the array
+        $updatedUsers = array_filter($currentUsers, function($id) use ($userId) {
+            return $id != $userId;
+        });
+        
+        // Re-index the array to avoid JSON object vs array issues
+        $updatedUsers = array_values($updatedUsers);
+        
+        // Update the group with the new users array
+        return $this->patch($groupId, ['users' => $updatedUsers]);
     }
 
     /**
