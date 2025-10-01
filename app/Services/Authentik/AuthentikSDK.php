@@ -30,6 +30,14 @@ class AuthentikSDK
     }
 
     /**
+     * Make a direct API request
+     */
+    public function request(string $method, string $endpoint, array $data = []): array
+    {
+        return $this->client->{strtolower($method)}($endpoint, $data);
+    }
+
+    /**
      * Manage applications
      */
     public function applications(): ApplicationManager
