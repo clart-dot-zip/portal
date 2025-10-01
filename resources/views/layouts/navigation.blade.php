@@ -21,6 +21,9 @@
                     <x-nav-link :href="route('groups.index')" :active="request()->routeIs('groups.*')">
                         {{ __('Groups') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('applications.index')" :active="request()->routeIs('applications.*')">
+                        {{ __('Applications') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -79,6 +82,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('groups.index')" :active="request()->routeIs('groups.*')">
                 {{ __('Groups') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('applications.index')" :active="request()->routeIs('applications.*')">
+                {{ __('Applications') }}
             </x-responsive-nav-link>
         </div>
 

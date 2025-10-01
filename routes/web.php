@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AuthentikController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\DashboardController;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Route;
@@ -43,6 +44,95 @@ Route::middleware('auth')->group(function () {
         Route::post('/sync', [GroupController::class, 'sync'])->name('sync');
         Route::post('/{id}/users', [GroupController::class, 'addUser'])->name('add-user');
         Route::delete('/{id}/users/{userId}', [GroupController::class, 'removeUser'])->name('remove-user');
+    });
+    
+    // Application Management Routes
+    Route::prefix('applications')->name('applications.')->group(function () {
+        Route::get('/', [ApplicationController::class, 'index'])->name('index');
+        Route::get('/debug', function() {
+            try {
+                $authentik = new \App\Services\Authentik\AuthentikSDK(config('services.authentik.api_token'));
+                $result = $authentik->request('GET', '/core/applications/');
+                return response()->json([
+                    'success' => true,
+                    'total' => count($result['results'] ?? []),
+                    'sample_app' => !empty($result['results']) ? $result['results'][0] : null
+                ]);
+            } catch (\Exception $e) {
+                return response()->json(['error' => $e->getMessage()]);
+            }
+        })->name('debug');
+        Route::get('/debug-policies/{id}', function($id) {
+            try {
+                $authentik = new \App\Services\Authentik\AuthentikSDK(config('services.authentik.api_token'));
+                
+                // Try different endpoints to understand what's available
+                $debug = [
+                    'application_id' => $id,
+                    'endpoints_tested' => []
+                ];
+                
+                // Test application details
+                try {
+                    $app = $authentik->request('GET', "/core/applications/{$id}/");
+                    $debug['application'] = $app;
+                    $debug['endpoints_tested']['get_app'] = ['success' => true];
+                } catch (\Exception $e) {
+                    $debug['endpoints_tested']['get_app'] = [
+                        'success' => false,
+                        'error' => $e->getMessage()
+                    ];
+                }
+                
+                // Test update with minimal data
+                try {
+                    $testUpdate = $authentik->request('PATCH', "/core/applications/{$id}/", [
+                        'name' => 'test-name'  // Try updating just the name
+                    ]);
+                    $debug['endpoints_tested']['patch_app'] = ['success' => true, 'result' => $testUpdate];
+                } catch (\Exception $e) {
+                    $debug['endpoints_tested']['patch_app'] = [
+                        'success' => false,
+                        'error' => $e->getMessage()
+                    ];
+                }
+                
+                return response()->json($debug);
+                
+            } catch (\Exception $e) {
+                return response()->json(['error' => $e->getMessage()]);
+            }
+        })->name('debug-policies');
+        Route::get('/debug-app-update/{id}', function($id) {
+            try {
+                $authentik = new \App\Services\Authentik\AuthentikSDK(config('services.authentik.api_token'));
+                
+                // Get current app data first
+                $currentApp = $authentik->request('GET', "/core/applications/{$id}/");
+                
+                // Try updating with group assignment
+                $updateData = array_merge($currentApp, [
+                    'group' => '76c306a5-e245-4edc-8218-cff70fae1bd8'  // Use the group ID from logs
+                ]);
+                
+                $result = $authentik->request('PUT', "/core/applications/{$id}/", $updateData);
+                
+                return response()->json([
+                    'success' => true,
+                    'current_app' => $currentApp,
+                    'update_result' => $result
+                ]);
+                
+            } catch (\Exception $e) {
+                return response()->json(['error' => $e->getMessage()]);
+            }
+        })->name('debug-app-update');
+        Route::get('/{id}', [ApplicationController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [ApplicationController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [ApplicationController::class, 'update'])->name('update');
+        Route::post('/{id}/groups', [ApplicationController::class, 'assignGroupAccess'])->name('assign-group');
+        Route::post('/{id}/users', [ApplicationController::class, 'assignUserAccess'])->name('assign-user');
+        Route::delete('/{id}/access', [ApplicationController::class, 'removeAccess'])->name('remove-access');
     });
     
     // Authentik Management Routes

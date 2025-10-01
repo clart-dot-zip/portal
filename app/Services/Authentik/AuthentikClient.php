@@ -110,7 +110,11 @@ class AuthentikClient
      */
     public function delete(string $endpoint): array
     {
-        return $this->makeRequest('DELETE', $endpoint)->json();
+        $response = $this->makeRequest('DELETE', $endpoint);
+        $json = $response->json();
+        
+        // Handle null responses for successful deletions
+        return $json ?? [];
     }
 
     /**

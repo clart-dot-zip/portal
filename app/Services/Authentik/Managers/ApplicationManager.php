@@ -24,6 +24,23 @@ class ApplicationManager extends BaseManager
     }
 
     /**
+     * Get application by ID using search (workaround for 404 on direct ID access)
+     */
+    public function get(string $id): array
+    {
+        // First try to find by PK in the listing
+        $applications = $this->list();
+        
+        foreach ($applications['results'] as $app) {
+            if ($app['pk'] === $id) {
+                return $app;
+            }
+        }
+        
+        throw new \Exception("Application with ID '{$id}' not found");
+    }
+
+    /**
      * Get application metrics
      */
     public function getMetrics(string $id): array
