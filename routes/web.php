@@ -42,6 +42,7 @@ Route::middleware(['auth', 'portal.admin:true'])->group(function () {
         Route::delete('/{id}', [UserController::class, 'destroy'])->name('destroy');
         Route::post('/sync', [UserController::class, 'sync'])->name('sync');
         Route::post('/{id}/toggle-admin', [UserController::class, 'togglePortalAdmin'])->name('toggle-admin');
+        Route::post('/{id}/send-recovery', [UserController::class, 'sendPasswordRecovery'])->name('send-recovery');
     });
     
     // Group Management Routes - Admin access required

@@ -674,4 +674,67 @@ class UserController extends Controller
             return redirect()->route('users.index')->with('error', 'Failed to delete user: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Send password recovery email to a user
+     */
+    public function sendPasswordRecovery(Request $request, $id)
+    {
+        try {
+            // Get user from Authentik
+            $authentikUser = $this->authentik->users()->get($id);
+            
+            if (!$authentikUser) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false, 
+                        'message' => 'User not found'
+                    ], 404);
+                }
+                return redirect()->back()->with('error', 'User not found');
+            }
+
+            // For now, we'll use a direct recovery link to the Authentik recovery page
+            // In a production environment, you might want to create a proper recovery flow
+            $authentikBaseUrl = config('services.authentik.base_url');
+            $recoveryLink = $authentikBaseUrl . '/if/flow/recovery/?email=' . urlencode($authentikUser['email']);
+
+            // Send recovery email
+            Mail::to($authentikUser['email'])->send(new \App\Mail\PasswordRecoveryEmail(
+                $authentikUser['name'] ?: $authentikUser['username'],
+                $recoveryLink
+            ));
+
+            Log::info('Password recovery email sent', [
+                'user_id' => $id,
+                'username' => $authentikUser['username'],
+                'email' => $authentikUser['email']
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true, 
+                    'message' => "Password recovery email sent to {$authentikUser['email']}"
+                ]);
+            }
+
+            return redirect()->back()->with('success', "Password recovery email sent to {$authentikUser['email']}");
+
+        } catch (\Exception $e) {
+            Log::error('Failed to send password recovery email', [
+                'user_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Failed to send password recovery email: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Failed to send password recovery email: ' . $e->getMessage());
+        }
+    }
 }

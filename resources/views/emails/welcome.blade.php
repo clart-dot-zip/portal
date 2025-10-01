@@ -151,9 +151,6 @@
             </div>
         @endif
         
-        <h3>Need Help?</h3>
-        <p>If you have any questions or need assistance getting started, please don't hesitate to contact our support team.</p>
-        
         <p>Best regards,<br>
         The {{ config('app.name') }} Team</p>
     </div>
