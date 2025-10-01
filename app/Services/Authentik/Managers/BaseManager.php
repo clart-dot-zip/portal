@@ -39,7 +39,8 @@ abstract class BaseManager
      */
     public function get(string $id): array
     {
-        return $this->client->get($this->getBaseEndpoint() . '/' . $id);
+        $endpoint = rtrim($this->getBaseEndpoint(), '/') . '/' . $id . '/';
+        return $this->client->get($endpoint);
     }
 
     /**
@@ -55,7 +56,8 @@ abstract class BaseManager
      */
     public function update(string $id, array $data): array
     {
-        return $this->client->put($this->getBaseEndpoint() . '/' . $id, $data);
+        $endpoint = rtrim($this->getBaseEndpoint(), '/') . '/' . $id . '/';
+        return $this->client->put($endpoint, $data);
     }
 
     /**
@@ -63,7 +65,8 @@ abstract class BaseManager
      */
     public function patch(string $id, array $data): array
     {
-        return $this->client->patch($this->getBaseEndpoint() . '/' . $id, $data);
+        $endpoint = rtrim($this->getBaseEndpoint(), '/') . '/' . $id . '/';
+        return $this->client->patch($endpoint, $data);
     }
 
     /**
@@ -71,6 +74,7 @@ abstract class BaseManager
      */
     public function delete(string $id): array
     {
-        return $this->client->delete($this->getBaseEndpoint() . '/' . $id);
+        $endpoint = rtrim($this->getBaseEndpoint(), '/') . '/' . $id . '/';
+        return $this->client->delete($endpoint);
     }
 }

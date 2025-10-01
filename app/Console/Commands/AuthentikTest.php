@@ -121,6 +121,14 @@ class AuthentikTest extends Command
             $users = $sdk->users()->list(['page_size' => 1]);
             $this->info('✓ Users manager: ' . ($users['count'] ?? 0) . ' total users');
             
+            // Test get individual user if any users exist
+            if (isset($users['results']) && count($users['results']) > 0) {
+                $firstUser = $users['results'][0];
+                $this->info('Testing get individual user: ' . $firstUser['username']);
+                $userDetail = $sdk->users()->get($firstUser['pk']);
+                $this->info('✓ User detail retrieved: ' . $userDetail['username']);
+            }
+            
         } catch (\Exception $e) {
             $this->error('✗ SDK managers failed: ' . $e->getMessage());
             $this->error('Exception class: ' . get_class($e));

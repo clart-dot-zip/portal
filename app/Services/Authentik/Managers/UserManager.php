@@ -82,7 +82,7 @@ class UserManager extends BaseManager
      */
     public function setPassword(string $userId, string $password): array
     {
-        return $this->client->post("/core/users/{$userId}/set_password", [
+        return $this->client->post("/core/users/{$userId}/set_password/", [
             'password' => $password
         ]);
     }
@@ -92,7 +92,7 @@ class UserManager extends BaseManager
      */
     public function addToGroup(string $userId, string $groupId): array
     {
-        return $this->client->post("/core/users/{$userId}/add_to_group", [
+        return $this->client->post("/core/users/{$userId}/add_to_group/", [
             'group' => $groupId
         ]);
     }
@@ -102,7 +102,7 @@ class UserManager extends BaseManager
      */
     public function removeFromGroup(string $userId, string $groupId): array
     {
-        return $this->client->post("/core/users/{$userId}/remove_from_group", [
+        return $this->client->post("/core/users/{$userId}/remove_from_group/", [
             'group' => $groupId
         ]);
     }
@@ -112,7 +112,7 @@ class UserManager extends BaseManager
      */
     public function getGroups(string $userId): array
     {
-        return $this->client->get("/core/users/{$userId}/groups");
+        return $this->client->get("/core/users/{$userId}/groups/");
     }
 
     /**
@@ -120,7 +120,7 @@ class UserManager extends BaseManager
      */
     public function getSessions(string $userId): array
     {
-        return $this->client->get("/core/users/{$userId}/sessions");
+        return $this->client->get("/core/users/{$userId}/sessions/");
     }
 
     /**
@@ -128,7 +128,7 @@ class UserManager extends BaseManager
      */
     public function terminateSessions(string $userId): array
     {
-        return $this->client->post("/core/users/{$userId}/logout", []);
+        return $this->client->post("/core/users/{$userId}/logout/", []);
     }
 
     /**
@@ -136,7 +136,7 @@ class UserManager extends BaseManager
      */
     public function getPermissions(string $userId): array
     {
-        return $this->client->get("/core/users/{$userId}/permissions");
+        return $this->client->get("/core/users/{$userId}/permissions/");
     }
 
     /**
@@ -144,7 +144,7 @@ class UserManager extends BaseManager
      */
     public function getMetrics(string $userId): array
     {
-        return $this->client->get("/core/users/{$userId}/metrics");
+        return $this->client->get("/core/users/{$userId}/metrics/");
     }
 
     /**
@@ -152,7 +152,7 @@ class UserManager extends BaseManager
      */
     public function sendRecoveryEmail(string $userId): array
     {
-        return $this->client->post("/core/users/{$userId}/recovery", []);
+        return $this->client->post("/core/users/{$userId}/recovery/", []);
     }
 
     /**
@@ -160,7 +160,7 @@ class UserManager extends BaseManager
      */
     public function getUsedBy(string $userId): array
     {
-        return $this->client->get("/core/users/{$userId}/used_by");
+        return $this->client->get("/core/users/{$userId}/used_by/");
     }
 
     /**
@@ -168,7 +168,7 @@ class UserManager extends BaseManager
      */
     public function impersonate(string $userId): array
     {
-        return $this->client->post("/core/users/{$userId}/impersonate", []);
+        return $this->client->post("/core/users/{$userId}/impersonate/", []);
     }
 
     /**
