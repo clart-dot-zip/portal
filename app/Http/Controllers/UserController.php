@@ -20,9 +20,13 @@ class UserController extends Controller
     /**
      * Display a listing of users from both Authentik and local database
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
+            $search = $request->get('search');
+            $page = $request->get('page', 1);
+            $pageSize = $request->get('page_size', 20);
+            
             // Get users from Authentik
             $authentikUsers = $this->authentik ? $this->authentik->users()->all() : [];
             
@@ -30,7 +34,7 @@ class UserController extends Controller
             $localUsers = User::all();
             
             // Merge and organize the data
-            $users = collect($authentikUsers)->map(function ($authentikUser) use ($localUsers) {
+            $allUsers = collect($authentikUsers)->map(function ($authentikUser) use ($localUsers) {
                 $localUser = $localUsers->firstWhere('authentik_id', $authentikUser['pk']);
                 
                 return [
@@ -49,11 +53,44 @@ class UserController extends Controller
                 ];
             });
 
-            return view('users.index', compact('users'));
+            // Apply client-side search filtering if search term provided
+            if ($search) {
+                $filteredUsers = $allUsers->filter(function($user) use ($search) {
+                    return stripos($user['username'], $search) !== false ||
+                           stripos($user['email'], $search) !== false ||
+                           stripos($user['name'], $search) !== false;
+                });
+                $users = $filteredUsers->values(); // Re-index collection
+                $totalCount = $users->count();
+                
+                // For search results, we need to handle pagination manually
+                $offset = ($page - 1) * $pageSize;
+                $users = $users->slice($offset, $pageSize);
+            } else {
+                $users = $allUsers;
+                $totalCount = $users->count();
+                
+                // Apply pagination to full results
+                $offset = ($page - 1) * $pageSize;
+                $users = $users->slice($offset, $pageSize);
+            }
+
+            // Add pagination info
+            $pagination = [
+                'current_page' => $page,
+                'total' => $totalCount,
+                'per_page' => $pageSize,
+                'last_page' => ceil($totalCount / $pageSize),
+                'has_more' => ($page * $pageSize) < $totalCount
+            ];
+
+            return view('users.index', compact('users', 'search', 'pagination'));
             
         } catch (\Exception $e) {
             return view('users.index', [
                 'users' => collect([]),
+                'search' => $search ?? null,
+                'pagination' => null,
                 'error' => 'Failed to load users: ' . $e->getMessage()
             ]);
         }

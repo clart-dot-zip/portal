@@ -4,38 +4,88 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Users Management') }}
             </h2>
-            <button id="syncButton" type="button"
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-flex items-center transition duration-150 ease-in-out">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-                <span id="syncButtonText">Sync Users</span>
-            </button>
+            <div class="flex space-x-2">
+                <button id="sync-users-btn" 
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline inline-flex items-center">
+                    <span id="sync-spinner" class="hidden">
+                        <svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+                    <svg id="sync-icon" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span id="sync-text">Sync Users</span>
+                </button>
+            </div>
         </div>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Success/Error Messages -->
+            
+            <!-- Status Messages -->
             @if(session('success'))
                 <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
                     <span class="block sm:inline">{{ session('success') }}</span>
                 </div>
             @endif
 
-            @if(session('error') || isset($error))
+            @if(session('error'))
                 <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                    <span class="block sm:inline">{{ session('error') ?? $error }}</span>
+                    <span class="block sm:inline">{{ session('error') }}</span>
                 </div>
             @endif
 
+            @if(isset($error))
+                <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">{{ $error }}</span>
+                </div>
+            @endif
+
+            <!-- Search Form -->
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                <div class="p-6 bg-white border-b border-gray-200">
+                    <form method="GET" action="{{ route('users.index') }}" class="flex items-center space-x-4">
+                        <div class="flex-1">
+                            <input type="text" 
+                                   name="search" 
+                                   value="{{ $search ?? '' }}"
+                                   placeholder="Search users by username, email, or name..."
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <button type="submit" 
+                                class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            Search
+                        </button>
+                        @if($search ?? false)
+                            <a href="{{ route('users.index') }}" 
+                               class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                                Clear
+                            </a>
+                        @endif
+                    </form>
+                </div>
+            </div>
+
             <!-- Users Table -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
+                <div class="p-6 bg-white border-b border-gray-200">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-lg font-medium text-gray-900">
-                            Authentik Users ({{ $users->count() }} total)
+                            @if(isset($search) && $search)
+                                Search Results for "{{ $search }}"
+                            @else
+                                All Users
+                            @endif
+                            @if(isset($pagination))
+                                <span class="text-sm font-normal text-gray-500">({{ $pagination['total'] }} total)</span>
+                            @else
+                                <span class="text-sm font-normal text-gray-500">({{ $users->count() }} total)</span>
+                            @endif
                         </h3>
+
                         <div class="flex items-center space-x-4">
                             <div class="flex items-center">
                                 <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
@@ -53,28 +103,28 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Status
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Username
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Name
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Email
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Active
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Superuser
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Last Login
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Actions
                                         </th>
                                     </tr>
@@ -107,10 +157,12 @@
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 @if($user['is_superuser'])
                                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                                                        Superuser
+                                                        Yes
                                                     </span>
                                                 @else
-                                                    <span class="text-sm text-gray-500">-</span>
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                        No
+                                                    </span>
                                                 @endif
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -118,21 +170,53 @@
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <a href="{{ route('users.show', $user['id']) }}" 
-                                                   class="text-indigo-600 hover:text-indigo-900 mr-3">View</a>
+                                                   class="text-blue-600 hover:text-blue-900">View</a>
                                             </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
+
+                        <!-- Pagination -->
+                        @if(isset($pagination) && $pagination['last_page'] > 1)
+                            <div class="mt-6 flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <span class="text-sm text-gray-700">
+                                        Showing page {{ $pagination['current_page'] }} of {{ $pagination['last_page'] }}
+                                        ({{ $pagination['total'] }} total users)
+                                    </span>
+                                </div>
+                                <div class="flex space-x-2">
+                                    @if($pagination['current_page'] > 1)
+                                        <a href="{{ route('users.index', array_merge(request()->query(), ['page' => $pagination['current_page'] - 1])) }}" 
+                                           class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                                            Previous
+                                        </a>
+                                    @endif
+                                    
+                                    @if($pagination['current_page'] < $pagination['last_page'])
+                                        <a href="{{ route('users.index', array_merge(request()->query(), ['page' => $pagination['current_page'] + 1])) }}" 
+                                           class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                                            Next
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
                     @else
-                        <div class="text-center py-12">
+                        <div class="text-center py-8">
                             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                             </svg>
                             <h3 class="mt-2 text-sm font-medium text-gray-900">No users found</h3>
                             <p class="mt-1 text-sm text-gray-500">
-                                Click the "Sync Users" button to load users from Authentik.
+                                @if(isset($search) && $search)
+                                    No users match your search criteria.
+                                @else
+                                    Click the "Sync Users" button to load users from Authentik.
+                                @endif
                             </p>
                         </div>
                     @endif
@@ -141,86 +225,89 @@
         </div>
     </div>
 
-    <!-- Loading Modal -->
-    <div id="loadingModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3 text-center">
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
-                    <svg class="animate-spin h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mt-2">Syncing Users</h3>
-                <div class="mt-2 px-7 py-3">
-                    <p class="text-sm text-gray-500">
-                        Please wait while we sync users from Authentik...
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const syncButton = document.getElementById('syncButton');
-            const syncButtonText = document.getElementById('syncButtonText');
-            const loadingModal = document.getElementById('loadingModal');
+            const syncBtn = document.getElementById('sync-users-btn');
+            const spinner = document.getElementById('sync-spinner');
+            const syncIcon = document.getElementById('sync-icon');
+            const syncText = document.getElementById('sync-text');
 
-            if (!syncButton) {
-                console.error('Sync button not found');
-                return;
+            if (syncBtn) {
+                syncBtn.addEventListener('click', function() {
+                    // Show loading state
+                    syncBtn.disabled = true;
+                    spinner.classList.remove('hidden');
+                    syncIcon.classList.add('hidden');
+                    syncText.textContent = 'Syncing...';
+
+                    // Make AJAX request
+                    fetch('{{ route("users.sync") }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        // Check if response is ok
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        
+                        // Try to parse as JSON
+                        return response.text().then(text => {
+                            try {
+                                return JSON.parse(text);
+                            } catch (e) {
+                                console.error('Response is not valid JSON:', text);
+                                throw new Error('Server returned invalid JSON response');
+                            }
+                        });
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // Show success message
+                            showMessage('Users synced successfully!', 'success');
+                            // Reload page to show updated data
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            showMessage(data.message || 'Sync failed', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Sync error:', error);
+                        showMessage('Sync failed: ' + error.message, 'error');
+                    })
+                    .finally(() => {
+                        // Reset button state
+                        syncBtn.disabled = false;
+                        spinner.classList.add('hidden');
+                        syncIcon.classList.remove('hidden');
+                        syncText.textContent = 'Sync Users';
+                    });
+                });
             }
 
-            console.log('Sync button found, adding event listener');
+            function showMessage(message, type) {
+                // Create message element
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `mb-4 px-4 py-3 rounded relative ${type === 'success' ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'}`;
+                messageDiv.innerHTML = `<span class="block sm:inline">${message}</span>`;
 
-            syncButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('Sync button clicked');
-                
-                // Show loading state
-                syncButton.disabled = true;
-                syncButtonText.textContent = 'Syncing...';
-                loadingModal.classList.remove('hidden');
+                // Insert at top of main content
+                const mainContent = document.querySelector('.py-12 .max-w-7xl');
+                if (mainContent) {
+                    mainContent.insertBefore(messageDiv, mainContent.firstChild);
 
-                // Make AJAX request
-                fetch('{{ route("users.sync") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => {
-                    console.log('Response received:', response.status);
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Data received:', data);
-                    // Hide loading modal
-                    loadingModal.classList.add('hidden');
-                    
-                    if (data.success) {
-                        // Show success message and reload page
-                        alert(data.message);
-                        window.location.reload();
-                    } else {
-                        // Show error message
-                        alert(data.message || 'Sync failed');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    loadingModal.classList.add('hidden');
-                    alert('Sync failed: ' + error.message);
-                })
-                .finally(() => {
-                    // Reset button state
-                    syncButton.disabled = false;
-                    syncButtonText.textContent = 'Sync Users';
-                });
-            });
+                    // Auto-remove after 5 seconds
+                    setTimeout(() => {
+                        messageDiv.remove();
+                    }, 5000);
+                }
+            }
         });
     </script>
 </x-app-layout>
