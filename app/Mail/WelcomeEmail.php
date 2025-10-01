@@ -15,16 +15,18 @@ class WelcomeEmail extends Mailable
 
     public $user;
     public $password;
+    public $recoveryLink;
     public $loginUrl;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($user, $password = null)
+    public function __construct($user, $password = null, $recoveryLink = null)
     {
         $this->user = $user;
         $this->password = $password;
-        $this->loginUrl = config('app.url') . '/login';
+        $this->recoveryLink = $recoveryLink;
+        $this->loginUrl = config('services.authentik.base_url');
     }
 
     /**

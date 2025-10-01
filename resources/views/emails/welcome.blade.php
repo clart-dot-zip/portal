@@ -68,7 +68,30 @@
         
         <p>Welcome to {{ config('app.name') }}! Your account has been successfully created and you now have access to our systems.</p>
         
-        @if($password)
+        @if($recoveryLink)
+            <div class="credentials">
+                <h3>🔑 Account Setup Required</h3>
+                <p><strong>Your Username:</strong> <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">{{ $user['username'] }}</code></p>
+                <p><strong>Your Email:</strong> <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">{{ $user['email'] }}</code></p>
+                <p><strong>Next Step:</strong> Click the button below to set up your password</p>
+            </div>
+            
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="{{ $recoveryLink }}" class="button">🚀 Set Up Your Password</a>
+            </div>
+            
+            <div class="warning">
+                <strong>📋 Setup Instructions:</strong>
+                <ol style="margin: 10px 0; padding-left: 20px;">
+                    <li><strong>Click the "Set Up Your Password" button above</strong></li>
+                    <li><strong>When prompted, enter your email:</strong> <code style="background: #fff; padding: 1px 4px;">{{ $user['email'] }}</code></li>
+                    <li><strong>Or enter your username:</strong> <code style="background: #fff; padding: 1px 4px;">{{ $user['username'] }}</code></li>
+                    <li><strong>Create a strong password</strong> (minimum 8 characters recommended)</li>
+                    <li><strong>Complete the setup</strong> and you'll be ready to log in!</li>
+                </ol>
+                <p style="margin-top: 15px;"><strong>💡 Pro tip:</strong> Copy your email or username from above to avoid typos!</p>
+            </div>
+        @elseif($password)
             <div class="credentials">
                 <h3>Your Login Credentials</h3>
                 <p><strong>Username:</strong> {{ $user['username'] }}</p>
@@ -84,22 +107,49 @@
                     <li>Delete this email after you have successfully logged in and changed your password</li>
                 </ul>
             </div>
+        @else
+            <div class="credentials">
+                <h3>Your Account</h3>
+                <p><strong>Username:</strong> {{ $user['username'] }}</p>
+                <p><strong>Email:</strong> {{ $user['email'] }}</p>
+                <p>Please contact your administrator for password setup instructions.</p>
+            </div>
         @endif
         
-        <h3>Getting Started</h3>
-        <ol>
-            <li>Click the login button below to access the system</li>
-            @if($password)
-                <li>Use the credentials provided above to sign in</li>
-                <li>You will be prompted to change your password on first login</li>
-            @endif
-            <li>Complete your profile information if required</li>
-            <li>Explore the available features and applications</li>
-        </ol>
+        <h3>🎯 Getting Started</h3>
+        @if($recoveryLink)
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #007bff;">
+                <p><strong>Follow these simple steps:</strong></p>
+                <ol style="margin: 10px 0; padding-left: 20px;">
+                    <li><strong>Click the "🚀 Set Up Your Password" button above</strong></li>
+                    <li><strong>Enter your details when prompted:</strong>
+                        <ul style="margin: 5px 0;">
+                            <li>Email: <code style="background: #fff; padding: 1px 4px;">{{ $user['email'] }}</code> (you can copy this!)</li>
+                            <li>OR Username: <code style="background: #fff; padding: 1px 4px;">{{ $user['username'] }}</code></li>
+                        </ul>
+                    </li>
+                    <li><strong>Create your password</strong> (make it strong and memorable)</li>
+                    <li><strong>Complete the setup</strong> and bookmark the login page</li>
+                    <li><strong>Start exploring!</strong> You'll have access to all authorized applications</li>
+                </ol>
+            </div>
+        @else
+            <ol>
+                <li>Click the login button below to access the system</li>
+                @if($password)
+                    <li>Use the credentials provided above to sign in</li>
+                    <li>You will be prompted to change your password on first login</li>
+                @endif
+                <li>Complete your profile information if required</li>
+                <li>Explore the available features and applications</li>
+            </ol>
+        @endif
         
-        <div style="text-align: center;">
-            <a href="{{ $loginUrl }}" class="button">Login to {{ config('app.name') }}</a>
-        </div>
+        @if(!$recoveryLink)
+            <div style="text-align: center;">
+                <a href="{{ $loginUrl }}" class="button">Login to {{ config('app.name') }}</a>
+            </div>
+        @endif
         
         <h3>Need Help?</h3>
         <p>If you have any questions or need assistance getting started, please don't hesitate to contact our support team.</p>

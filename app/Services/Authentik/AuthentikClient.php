@@ -86,7 +86,9 @@ class AuthentikClient
      */
     public function post(string $endpoint, array $data = []): array
     {
-        return $this->makeRequest('POST', $endpoint, $data)->json();
+        $response = $this->makeRequest('POST', $endpoint, $data);
+        $json = $response->json();
+        return $json ?: [];
     }
 
     /**

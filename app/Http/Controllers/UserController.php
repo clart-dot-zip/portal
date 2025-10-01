@@ -230,9 +230,12 @@ class UserController extends Controller
                 'email' => $validated['email']
             ]);
 
-            // Generate a secure password if requested
+            // Generate a secure password if requested (for display/record purposes)
             $password = null;
+            $recoveryLink = null;
             if (($validated['generate_password'] ?? true)) {
+                // Instead of setting a password directly, we'll generate a recovery link
+                // This is more secure and follows Authentik's intended workflow
                 $password = $this->generateSecurePassword();
             }
 
@@ -246,17 +249,12 @@ class UserController extends Controller
                 'type' => $validated['type'] ?? 'internal'
             ];
 
-            // Add password if generated
-            if ($password) {
-                $userData['password'] = $password;
-            }
-
-            // Set password change requirement
+            // Set password change requirement (this will force password setup on first login)
             if (($validated['force_password_change'] ?? true)) {
                 $userData['password_change_date'] = now()->subDay()->toISOString(); // Force change
             }
 
-            Log::info('Creating user in Authentik', ['user_data' => array_merge($userData, ['password' => $password ? '[GENERATED]' : '[NONE]'])]);
+            Log::info('Creating user in Authentik', ['user_data' => $userData]);
 
             // Create the user in Authentik
             $authentikUser = $this->authentik->users()->create($userData);
@@ -265,6 +263,28 @@ class UserController extends Controller
                 'user_id' => $authentikUser['pk'],
                 'username' => $authentikUser['username']
             ]);
+
+            // Generate recovery link for password setup instead of setting password directly
+            if ($password) {
+                try {
+                    $recoveryResult = $this->authentik->request('POST', "/core/users/{$authentikUser['pk']}/recovery/", []);
+                    
+                    if (isset($recoveryResult['link'])) {
+                        $recoveryLink = $recoveryResult['link'];
+                        
+                        Log::info('Recovery link generated for user', [
+                            'user_id' => $authentikUser['pk'],
+                            'link_generated' => true
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Failed to generate recovery link for user', [
+                        'user_id' => $authentikUser['pk'],
+                        'error' => $e->getMessage()
+                    ]);
+                    // Don't fail the entire operation, but log this issue
+                }
+            }
 
             // Add user to selected groups
             if (isset($validated['groups']) && is_array($validated['groups'])) {
@@ -288,7 +308,7 @@ class UserController extends Controller
             // Send welcome email if requested
             if (($validated['send_email'] ?? true)) {
                 try {
-                    $this->sendWelcomeEmail($authentikUser, $password);
+                    $this->sendWelcomeEmail($authentikUser, $password, $recoveryLink);
                     Log::info('Welcome email sent', ['user_id' => $authentikUser['pk']]);
                 } catch (\Exception $e) {
                     Log::warning('Failed to send welcome email', [
@@ -318,7 +338,9 @@ class UserController extends Controller
                 'success' => true,
                 'message' => 'User onboarded successfully',
                 'username' => $authentikUser['username'],
-                'password' => $password
+                'password' => $password,
+                'recovery_link' => $recoveryLink,
+                'setup_method' => $recoveryLink ? 'recovery_link' : 'manual'
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -367,13 +389,14 @@ class UserController extends Controller
     /**
      * Send welcome email to the new user
      */
-    private function sendWelcomeEmail($user, $password)
+    private function sendWelcomeEmail($user, $password, $recoveryLink = null)
     {
         try {
-            Mail::to($user['email'])->send(new WelcomeEmail($user, $password));
+            Mail::to($user['email'])->send(new WelcomeEmail($user, $password, $recoveryLink));
             Log::info('Welcome email sent successfully', [
                 'user_id' => $user['pk'],
-                'email' => $user['email']
+                'email' => $user['email'],
+                'has_recovery_link' => !empty($recoveryLink)
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to send welcome email', [
