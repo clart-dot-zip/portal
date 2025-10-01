@@ -129,6 +129,9 @@
                                             Superuser
                                         </th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Portal Admin
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Last Login
                                         </th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -171,6 +174,25 @@
                                                         No
                                                     </span>
                                                 @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center space-x-2">
+                                                    @if($user['is_portal_admin'])
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                            Admin
+                                                        </span>
+                                                    @else
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                            User
+                                                        </span>
+                                                    @endif
+                                                    <button class="toggle-admin-btn text-xs {{ $user['is_portal_admin'] ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900' }}"
+                                                            data-user-id="{{ $user['id'] }}"
+                                                            data-username="{{ $user['username'] }}"
+                                                            data-is-admin="{{ $user['is_portal_admin'] ? 'true' : 'false' }}">
+                                                        {{ $user['is_portal_admin'] ? 'Remove' : 'Grant' }}
+                                                    </button>
+                                                </div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {{ $user['last_login'] ? \Carbon\Carbon::parse($user['last_login'])->diffForHumans() : 'Never' }}
@@ -311,6 +333,16 @@
                 });
             });
 
+            // Toggle admin button handlers
+            document.querySelectorAll('.toggle-admin-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const userId = this.dataset.userId;
+                    const username = this.dataset.username;
+                    const isAdmin = this.dataset.isAdmin === 'true';
+                    togglePortalAdmin(userId, username, isAdmin);
+                });
+            });
+
             function deleteUser(userId, username) {
                 if (!confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
                     return;
@@ -345,6 +377,46 @@
                 .catch(error => {
                     console.error('Delete user error:', error);
                     showMessage('Failed to delete user: ' + error.message, 'error');
+                });
+            }
+
+            function togglePortalAdmin(userId, username, isCurrentlyAdmin) {
+                const action = isCurrentlyAdmin ? 'remove' : 'grant';
+                const actionText = isCurrentlyAdmin ? 'remove Portal admin access from' : 'grant Portal admin access to';
+                
+                if (!confirm(`Are you sure you want to ${actionText} user "${username}"?`)) {
+                    return;
+                }
+
+                fetch(`{{ url('users') }}/${userId}/toggle-admin`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showMessage(data.message, 'success');
+                        // Reload page to show updated data
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        showMessage(data.message || `Failed to ${action} Portal admin access`, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Toggle Portal admin error:', error);
+                    showMessage(`Failed to ${action} Portal admin access: ` + error.message, 'error');
                 });
             }
 

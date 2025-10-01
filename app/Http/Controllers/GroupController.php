@@ -27,6 +27,83 @@ class GroupController extends Controller
     }
 
     /**
+     * Show create group form
+     */
+    public function create()
+    {
+        if (!$this->authentik) {
+            return redirect()->route('groups.index')->with('error', 'Authentik SDK is not available.');
+        }
+
+        try {
+            // Get all existing groups to use as potential parents
+            $result = $this->authentik->groups()->list(['page_size' => 100]);
+            $parentGroups = $result['results'] ?? [];
+
+            return view('groups.create', compact('parentGroups'));
+
+        } catch (\Exception $e) {
+            Log::error('Failed to load group creation form', ['error' => $e->getMessage()]);
+            return redirect()->route('groups.index')->with('error', 'Failed to load group creation form: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Store a new group
+     */
+    public function store(Request $request)
+    {
+        if (!$this->authentik) {
+            return redirect()->route('groups.index')->with('error', 'Authentik SDK is not available.');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'is_superuser' => 'boolean',
+            'parent' => 'nullable|string',
+            'attributes' => 'nullable|json'
+        ]);
+
+        try {
+            $groupData = [
+                'name' => $request->name,
+                'is_superuser' => $request->boolean('is_superuser', false)
+            ];
+
+            if ($request->filled('parent')) {
+                $groupData['parent'] = $request->parent;
+            }
+
+            if ($request->filled('attributes')) {
+                $decodedAttributes = json_decode($request->input('attributes'), true);
+                
+                if (!empty($decodedAttributes)) {
+                    $groupData['attributes'] = $decodedAttributes;
+                } else {
+                    $groupData['attributes'] = (object)[];
+                }
+            }
+
+            $newGroup = $this->authentik->groups()->create($groupData);
+
+            Log::info('Group created successfully', [
+                'group_id' => $newGroup['pk'],
+                'group_name' => $newGroup['name']
+            ]);
+
+            return redirect()->route('groups.show', $newGroup['pk'])->with('success', 'Group created successfully!');
+
+        } catch (\Exception $e) {
+            Log::error('Failed to create group', [
+                'error' => $e->getMessage(),
+                'data' => $request->all()
+            ]);
+            
+            return back()->withInput()->with('error', 'Failed to create group: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Display groups listing
      */
     public function index(Request $request)

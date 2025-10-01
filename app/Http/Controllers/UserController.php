@@ -40,6 +40,22 @@ class UserController extends Controller
             $allUsers = collect($authentikUsers)->map(function ($authentikUser) use ($localUsers) {
                 $localUser = $localUsers->firstWhere('authentik_id', $authentikUser['pk']);
                 
+                // Check if user is Portal admin
+                $isPortalAdmin = false;
+                if ($this->authentik) {
+                    try {
+                        $userGroups = $this->authentik->users()->getGroups($authentikUser['pk']);
+                        foreach ($userGroups as $group) {
+                            if (strtolower(trim($group['name'])) === 'portal admin') {
+                                $isPortalAdmin = true;
+                                break;
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        // Ignore group fetch errors for listing
+                    }
+                }
+                
                 return [
                     'id' => $authentikUser['pk'],
                     'username' => $authentikUser['username'],
@@ -47,6 +63,7 @@ class UserController extends Controller
                     'name' => $authentikUser['name'],
                     'is_active' => $authentikUser['is_active'],
                     'is_superuser' => $authentikUser['is_superuser'],
+                    'is_portal_admin' => $isPortalAdmin,
                     'last_login' => $authentikUser['last_login'] ? 
                         \Carbon\Carbon::parse($authentikUser['last_login'])->format('Y-m-d H:i:s') : null,
                     'date_joined' => $authentikUser['date_joined'] ? 
@@ -176,6 +193,193 @@ class UserController extends Controller
                 'error' => $e->getMessage()
             ]);
             return redirect()->route('users.index')->with('error', 'User not found: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show current user's profile
+     */
+    public function profile(Request $request)
+    {
+        $user = Auth::user();
+        $isPortalAdmin = $request->attributes->get('isPortalAdmin', false);
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // Get user's detailed information from Authentik if available
+        $authentikUser = null;
+        if ($this->authentik && $user->authentik_id) {
+            try {
+                $authentikUser = $this->authentik->users()->get($user->authentik_id);
+            } catch (\Exception $e) {
+                Log::warning('Failed to fetch user details from Authentik', [
+                    'user_id' => $user->id,
+                    'authentik_id' => $user->authentik_id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        // Get user's groups
+        $userGroups = [];
+        if ($this->authentik && $user->authentik_id) {
+            try {
+                $userGroups = $this->authentik->users()->getGroups($user->authentik_id);
+            } catch (\Exception $e) {
+                Log::warning('Failed to fetch user groups from Authentik', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        return view('users.profile', compact('user', 'authentikUser', 'userGroups', 'isPortalAdmin'));
+    }
+
+    /**
+     * Update current user's profile
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+        ]);
+
+        try {
+            // Update local user record using User model
+            User::where('id', $user->id)->update([
+                'name' => $request->name,
+                'email' => $request->email,
+            ]);
+
+            // Update in Authentik if possible
+            if ($this->authentik && $user->authentik_id) {
+                try {
+                    $this->authentik->users()->update($user->authentik_id, [
+                        'name' => $request->name,
+                        'email' => $request->email,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::warning('Failed to update user in Authentik', [
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage()
+                    ]);
+                    // Continue anyway - local update succeeded
+                }
+            }
+
+            return redirect()->route('users.profile')->with('success', 'Profile updated successfully!');
+
+        } catch (\Exception $e) {
+            Log::error('Failed to update user profile', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return back()->withInput()->with('error', 'Failed to update profile: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Toggle Portal admin access for a user
+     */
+    public function togglePortalAdmin(Request $request, $id)
+    {
+        if (!$this->authentik) {
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Authentik SDK is not available.'], 500);
+            }
+            return back()->with('error', 'Authentik SDK is not available.');
+        }
+
+        try {
+            // Get the Portal admin group
+            $groups = $this->authentik->groups()->list(['page_size' => 100]);
+            $portalAdminGroup = null;
+            
+            foreach ($groups['results'] ?? [] as $group) {
+                if (strtolower(trim($group['name'])) === 'portal admin') {
+                    $portalAdminGroup = $group;
+                    break;
+                }
+            }
+
+            if (!$portalAdminGroup) {
+                // Create Portal admin group if it doesn't exist
+                $portalAdminGroup = $this->authentik->groups()->create([
+                    'name' => 'Portal admin',
+                    'is_superuser' => false,
+                    'attributes' => [
+                        'description' => 'Users with full administrative access to the Portal application',
+                        'portal_role' => 'admin'
+                    ]
+                ]);
+                
+                Log::info('Created Portal admin group', ['group_id' => $portalAdminGroup['pk']]);
+            }
+
+            // Check if user is currently in Portal admin group
+            $userGroups = $this->authentik->users()->getGroups($id);
+            $isCurrentlyAdmin = false;
+            
+            foreach ($userGroups as $group) {
+                if (strtolower(trim($group['name'])) === 'portal admin') {
+                    $isCurrentlyAdmin = true;
+                    break;
+                }
+            }
+
+            if ($isCurrentlyAdmin) {
+                // Remove from Portal admin group
+                $this->authentik->groups()->removeUser($portalAdminGroup['pk'], $id);
+                $message = 'Portal admin access removed successfully!';
+                $action = 'removed';
+            } else {
+                // Add to Portal admin group
+                $this->authentik->groups()->addUser($portalAdminGroup['pk'], $id);
+                $message = 'Portal admin access granted successfully!';
+                $action = 'granted';
+            }
+
+            Log::info('Portal admin access toggled', [
+                'user_id' => $id,
+                'action' => $action,
+                'group_id' => $portalAdminGroup['pk']
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'is_admin' => !$isCurrentlyAdmin
+                ]);
+            }
+
+            return back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to toggle Portal admin access', [
+                'user_id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to toggle Portal admin access: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return back()->with('error', 'Failed to toggle Portal admin access: ' . $e->getMessage());
         }
     }
 
