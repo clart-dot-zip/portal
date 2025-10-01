@@ -51,23 +51,37 @@ class GroupController extends Controller
                 'ordering' => 'name'
             ];
 
-            if ($search) {
-                $params['search'] = $search;
-            }
-
+            // Note: Authentik API doesn't seem to support search on groups endpoint
+            // We'll get all groups and filter client-side
+            
             // Get groups from Authentik
             $result = $this->authentik->groups()->list($params);
-            $groups = $result['results'] ?? [];
-
-            // Add pagination info - check both locations for count
-            $totalCount = $result['count'] ?? $result['pagination']['count'] ?? 0;
+            $allGroups = $result['results'] ?? [];
             
+            // Apply client-side search filtering if search term provided
+            if ($search) {
+                $filteredGroups = array_filter($allGroups, function($group) use ($search) {
+                    return stripos($group['name'], $search) !== false;
+                });
+                $groups = array_values($filteredGroups); // Re-index array
+                $totalCount = count($groups);
+                
+                // For search results, we need to handle pagination manually
+                $offset = ($page - 1) * $pageSize;
+                $groups = array_slice($groups, $offset, $pageSize);
+            } else {
+                $groups = $allGroups;
+                // Get total count from API response
+                $totalCount = $result['count'] ?? $result['pagination']['count'] ?? 0;
+            }
+
+            // Add pagination info - handle both API and client-side filtering
             $pagination = [
                 'current_page' => $page,
                 'total' => $totalCount,
                 'per_page' => $pageSize,
                 'last_page' => ceil($totalCount / $pageSize),
-                'has_more' => !is_null($result['next'] ?? null)
+                'has_more' => ($page * $pageSize) < $totalCount
             ];
 
             return view('groups.index', compact('groups', 'pagination', 'search'));
