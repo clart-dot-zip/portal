@@ -236,65 +236,76 @@ class ApplicationController extends Controller
                 Log::warning('Failed to get groups for application edit', ['error' => $e->getMessage()]);
             }
             
-            // Get current group assignment for this application
+            // Get current policy bindings for this application instead of using group field
             $currentAccess = [];
+            $policyBindings = [];
             
             try {
-                // The application's group field contains the assigned group
-                if (isset($application['group']) && $application['group']) {
-                    // Get group details
-                    try {
-                        $assignedGroupId = $application['group'];
+                $bindingsResult = $this->authentik->request('GET', '/policies/bindings/', [
+                    'target' => $id
+                ]);
+                $policyBindings = $bindingsResult['results'] ?? [];
+                
+                // Convert policy bindings to currentAccess format for the view
+                foreach ($policyBindings as $binding) {
+                    if ($binding['group'] && !$binding['user'] && !$binding['policy']) {
+                        // This is a group access binding
                         $groupDetails = null;
                         
                         // Find the group in our groups list
                         foreach ($groups as $group) {
-                            if ($group['pk'] === $assignedGroupId) {
+                            if ($group['pk'] === $binding['group']) {
                                 $groupDetails = $group;
                                 break;
                             }
                         }
                         
-                        $currentAccess = [
+                        $currentAccess[] = [
                             'type' => 'group',
-                            'group_id' => $assignedGroupId,
-                            'group_name' => $groupDetails ? $groupDetails['name'] : $assignedGroupId,
-                            'is_default' => false
+                            'group_id' => $binding['group'],
+                            'group_name' => $groupDetails ? $groupDetails['name'] : 'Unknown Group',
+                            'binding_id' => $binding['pk'],
+                            'enabled' => $binding['enabled']
                         ];
-                        
-                        Log::info('Loaded current group assignment for application', [
-                            'application_id' => $id,
-                            'assigned_group' => $assignedGroupId,
-                            'group_name' => $groupDetails ? $groupDetails['name'] : 'Unknown'
-                        ]);
-                        
-                    } catch (\Exception $e) {
-                        Log::warning('Failed to get group details for application', [
-                            'application_id' => $id,
-                            'group_id' => $application['group'],
-                            'error' => $e->getMessage()
-                        ]);
                     }
-                } else {
-                    // No group assigned means default access (usually everyone or no one)
-                    $currentAccess = [
-                        'type' => 'default',
-                        'description' => 'No specific group assigned - using default access policy'
-                    ];
                     
-                    Log::info('Application uses default access policy', [
-                        'application_id' => $id
-                    ]);
+                    if ($binding['user'] && !$binding['group'] && !$binding['policy']) {
+                        // This is a user access binding
+                        $userDetails = null;
+                        
+                        // Find the user in our users list
+                        foreach ($users as $user) {
+                            if ($user['pk'] == $binding['user']) {
+                                $userDetails = $user;
+                                break;
+                            }
+                        }
+                        
+                        $currentAccess[] = [
+                            'type' => 'user',
+                            'user_id' => $binding['user'],
+                            'user_name' => $userDetails ? ($userDetails['name'] ?: $userDetails['username']) : 'Unknown User',
+                            'binding_id' => $binding['pk'],
+                            'enabled' => $binding['enabled']
+                        ];
+                    }
                 }
                 
+                Log::info('Retrieved policy bindings for application edit', [
+                    'application_id' => $id,
+                    'bindings_count' => count($policyBindings),
+                    'group_access_count' => count(array_filter($currentAccess, fn($a) => $a['type'] === 'group')),
+                    'user_access_count' => count(array_filter($currentAccess, fn($a) => $a['type'] === 'user'))
+                ]);
+                
             } catch (\Exception $e) {
-                Log::warning('Failed to determine current access for application', [
+                Log::warning('Failed to get policy bindings for application edit', [
                     'application_id' => $id,
                     'error' => $e->getMessage()
                 ]);
             }
 
-            return view('applications.edit', compact('application', 'users', 'groups', 'currentAccess'));
+            return view('applications.edit', compact('application', 'users', 'groups', 'currentAccess', 'policyBindings'));
 
         } catch (\Exception $e) {
             Log::error('Failed to get application for editing', [

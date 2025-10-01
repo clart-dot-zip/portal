@@ -272,8 +272,8 @@
             document.getElementById('policies-empty').classList.add('hidden');
 
             // Load current access from server data
-            const currentAccess = @json($currentAccess ?? null);
-            const application = @json($application);
+            const currentAccess = {!! json_encode($currentAccess ?? []) !!};
+            const application = {!! json_encode($application) !!};
             
             console.log('Current access:', currentAccess);
             console.log('Application:', application);
@@ -286,8 +286,15 @@
                 
                 let hasAnyPolicies = false;
                 
-                // Add current access information
-                if (currentAccess) {
+                // Add current access information (now an array)
+                if (currentAccess && Array.isArray(currentAccess) && currentAccess.length > 0) {
+                    hasAnyPolicies = true;
+                    currentAccess.forEach(access => {
+                        const row = createAccessRow(access);
+                        tableBody.appendChild(row);
+                    });
+                } else if (currentAccess && !Array.isArray(currentAccess)) {
+                    // Handle old single object format for backwards compatibility
                     hasAnyPolicies = true;
                     const row = createAccessRow(currentAccess);
                     tableBody.appendChild(row);
@@ -316,9 +323,31 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         ${access.group_name}
+                        ${access.enabled === false ? '<span class="ml-2 text-red-500">(Disabled)</span>' : ''}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button onclick="removeGroupAccess()" 
+                        <button onclick="removePolicyBinding('${access.binding_id}')" 
+                                class="text-red-600 hover:text-red-900">
+                            Remove
+                        </button>
+                    </td>
+                `;
+            } else if (access.type === 'user') {
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        User Access Assignment
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            User
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${access.user_name}
+                        ${access.enabled === false ? '<span class="ml-2 text-red-500">(Disabled)</span>' : ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="removePolicyBinding('${access.binding_id}')" 
                                 class="text-red-600 hover:text-red-900">
                             Remove
                         </button>
@@ -346,34 +375,34 @@
             return row;
         }
         
-        function removeGroupAccess() {
-            if (!confirm('Are you sure you want to remove group access? This will reset the application to default access.')) {
+        function removePolicyBinding(bindingId) {
+            if (!confirm('Are you sure you want to remove this access policy?')) {
                 return;
             }
 
-            fetch(`{{ route('applications.update', $application['pk']) }}`, {
-                method: 'PUT',
+            fetch(`{{ route('applications.remove-access', $application['pk']) }}`, {
+                method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
-                    group: null  // Remove group assignment
+                    policy_id: bindingId
                 })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showMessage('Group access removed successfully', 'success');
+                    showMessage('Access policy removed successfully', 'success');
                     loadAccessPolicies();
                 } else {
-                    showMessage(data.message || 'Failed to remove group access', 'error');
+                    showMessage(data.message || 'Failed to remove access policy', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showMessage('An error occurred while removing group access', 'error');
+                showMessage('An error occurred while removing access policy', 'error');
             });
         }
 
