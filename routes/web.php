@@ -31,6 +31,8 @@ Route::middleware('auth')->group(function () {
     // User Management Routes
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('index');
+        Route::get('/onboard', [UserController::class, 'onboard'])->name('onboard');
+        Route::post('/onboard', [UserController::class, 'processOnboard'])->name('onboard.process');
         Route::get('/{id}', [UserController::class, 'show'])->name('show');
         Route::post('/sync', [UserController::class, 'sync'])->name('sync');
     });

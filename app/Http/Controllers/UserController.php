@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\Authentik\AuthentikSDK;
 use App\Models\User;
+use App\Mail\WelcomeEmail;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class UserController extends Controller
 {
@@ -173,6 +175,212 @@ class UserController extends Controller
                 'error' => $e->getMessage()
             ]);
             return redirect()->route('users.index')->with('error', 'User not found: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show the user onboarding form
+     */
+    public function onboard()
+    {
+        if (!$this->authentik) {
+            return redirect()->route('users.index')->with('error', 'Authentik SDK is not available.');
+        }
+
+        try {
+            // Get all groups for selection
+            $groupsResult = $this->authentik->groups()->list(['page_size' => 100]);
+            $groups = $groupsResult['results'] ?? [];
+
+            return view('users.onboard', compact('groups'));
+        } catch (\Exception $e) {
+            Log::error('Failed to load onboard form', ['error' => $e->getMessage()]);
+            return redirect()->route('users.index')->with('error', 'Failed to load onboard form: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Process the user onboarding
+     */
+    public function processOnboard(Request $request)
+    {
+        if (!$this->authentik) {
+            return response()->json(['success' => false, 'message' => 'Authentik SDK is not available.'], 500);
+        }
+
+        try {
+            // Validate the request
+            $validated = $request->validate([
+                'username' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+                'first_name' => 'nullable|string|max:255',
+                'last_name' => 'nullable|string|max:255',
+                'path' => 'nullable|string|max:255',
+                'type' => 'required|in:internal,external,service_account',
+                'groups' => 'nullable|array',
+                'groups.*' => 'string',
+                'generate_password' => 'boolean',
+                'send_email' => 'boolean',
+                'force_password_change' => 'boolean'
+            ]);
+
+            Log::info('Starting user onboarding process', [
+                'username' => $validated['username'],
+                'email' => $validated['email']
+            ]);
+
+            // Generate a secure password if requested
+            $password = null;
+            if (($validated['generate_password'] ?? true)) {
+                $password = $this->generateSecurePassword();
+            }
+
+            // Prepare user data for Authentik
+            $userData = [
+                'username' => $validated['username'],
+                'email' => $validated['email'],
+                'name' => trim(($validated['first_name'] ?? '') . ' ' . ($validated['last_name'] ?? '')),
+                'is_active' => true,
+                'path' => $validated['path'] ?? 'users',
+                'type' => $validated['type'] ?? 'internal'
+            ];
+
+            // Add password if generated
+            if ($password) {
+                $userData['password'] = $password;
+            }
+
+            // Set password change requirement
+            if (($validated['force_password_change'] ?? true)) {
+                $userData['password_change_date'] = now()->subDay()->toISOString(); // Force change
+            }
+
+            Log::info('Creating user in Authentik', ['user_data' => array_merge($userData, ['password' => $password ? '[GENERATED]' : '[NONE]'])]);
+
+            // Create the user in Authentik
+            $authentikUser = $this->authentik->users()->create($userData);
+
+            Log::info('User created successfully in Authentik', [
+                'user_id' => $authentikUser['pk'],
+                'username' => $authentikUser['username']
+            ]);
+
+            // Add user to selected groups
+            if (isset($validated['groups']) && is_array($validated['groups'])) {
+                foreach ($validated['groups'] as $groupId) {
+                    try {
+                        $this->authentik->groups()->addUser($groupId, $authentikUser['pk']);
+                        Log::info('Added user to group', [
+                            'user_id' => $authentikUser['pk'],
+                            'group_id' => $groupId
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::warning('Failed to add user to group', [
+                            'user_id' => $authentikUser['pk'],
+                            'group_id' => $groupId,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+            }
+
+            // Send welcome email if requested
+            if (($validated['send_email'] ?? true)) {
+                try {
+                    $this->sendWelcomeEmail($authentikUser, $password);
+                    Log::info('Welcome email sent', ['user_id' => $authentikUser['pk']]);
+                } catch (\Exception $e) {
+                    Log::warning('Failed to send welcome email', [
+                        'user_id' => $authentikUser['pk'],
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            // Create local user record for synchronization
+            try {
+                User::create([
+                    'authentik_id' => $authentikUser['pk'],
+                    'name' => $userData['name'],
+                    'email' => $authentikUser['email'],
+                    'username' => $authentikUser['username']
+                ]);
+                Log::info('Local user record created', ['user_id' => $authentikUser['pk']]);
+            } catch (\Exception $e) {
+                Log::warning('Failed to create local user record', [
+                    'user_id' => $authentikUser['pk'],
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User onboarded successfully',
+                'username' => $authentikUser['username'],
+                'password' => $password
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Failed to onboard user', [
+                'username' => $validated['username'] ?? 'unknown',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to onboard user: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate a secure password
+     */
+    private function generateSecurePassword($length = 16)
+    {
+        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+        $password = '';
+        
+        // Ensure we have at least one of each character type
+        $password .= chr(rand(97, 122)); // lowercase
+        $password .= chr(rand(65, 90));  // uppercase
+        $password .= chr(rand(48, 57));  // number
+        $password .= '!@#$%^&*'[rand(0, 7)]; // special char
+        
+        // Fill the rest randomly
+        for ($i = 4; $i < $length; $i++) {
+            $password .= $characters[rand(0, strlen($characters) - 1)];
+        }
+        
+        // Shuffle the password to randomize the positions
+        return str_shuffle($password);
+    }
+
+    /**
+     * Send welcome email to the new user
+     */
+    private function sendWelcomeEmail($user, $password)
+    {
+        try {
+            Mail::to($user['email'])->send(new WelcomeEmail($user, $password));
+            Log::info('Welcome email sent successfully', [
+                'user_id' => $user['pk'],
+                'email' => $user['email']
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send welcome email', [
+                'user_id' => $user['pk'],
+                'email' => $user['email'],
+                'error' => $e->getMessage()
+            ]);
+            throw $e; // Re-throw so calling code can handle it
         }
     }
 }
