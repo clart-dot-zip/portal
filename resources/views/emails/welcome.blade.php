@@ -1,167 +1,247 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Welcome to {{ config('app.name') }}</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: #333;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
             max-width: 600px;
             margin: 0 auto;
-            padding: 20px;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
         .header {
-            background-color: #f8f9fa;
-            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
             text-align: center;
-            border-radius: 8px 8px 0 0;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
         }
         .content {
-            background-color: #ffffff;
-            padding: 30px;
-            border: 1px solid #e9ecef;
+            padding: 40px 30px;
         }
-        .footer {
-            background-color: #f8f9fa;
-            padding: 20px;
+        .content h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .content p {
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 20px 0;
             text-align: center;
-            border-radius: 0 0 8px 8px;
-            border: 1px solid #e9ecef;
-            border-top: none;
+            transition: transform 0.2s;
         }
-        .credentials {
-            background-color: #e3f2fd;
-            border: 1px solid #2196f3;
-            border-radius: 5px;
+        .action-button:hover {
+            transform: translateY(-2px);
+        }
+        .credentials-box {
+            background-color: #f7fafc;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .credentials-box h3 {
+            margin: 0 0 15px 0;
+            color: #2d3748;
+            font-size: 18px;
+        }
+        .credentials-box p {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .credential-value {
+            background: #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #2d3748;
+            display: inline-block;
+            margin: 0 4px;
+        }
+        .instructions-box {
+            background-color: #edf2f7;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .instructions-box h3 {
+            margin: 0 0 15px 0;
+            color: #2d3748;
+            font-size: 18px;
+        }
+        .instructions-box ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions-box li {
+            margin: 8px 0;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+        .warning-box {
+            background-color: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 8px;
             padding: 15px;
             margin: 20px 0;
         }
-        .button {
-            display: inline-block;
-            background-color: #007bff;
-            color: white;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 5px;
-            margin: 15px 0;
+        .warning-box p {
+            margin: 0;
+            font-size: 14px;
+            color: #742a2a;
         }
-        .warning {
-            background-color: #fff3cd;
-            border: 1px solid #ffc107;
-            border-radius: 5px;
-            padding: 10px;
-            margin: 15px 0;
-            color: #856404;
+        .alternative-link {
+            background-color: #f7fafc;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .alternative-link p {
+            margin: 0;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        .alternative-link a {
+            color: #667eea;
+            word-break: break-all;
+        }
+        .footer {
+            background-color: #f7fafc;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #718096;
+            border-top: 1px solid #e2e8f0;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 5px;
+            }
+            .content {
+                padding: 20px;
+            }
+            .header {
+                padding: 20px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Welcome to {{ config('app.name') }}</h1>
-    </div>
-    
-    <div class="content">
-        <h2>Hello {{ $user['name'] ?: $user['username'] }}!</h2>
+    <div class="container">
+        <div class="header">
+            <h1>{{ config('app.name') }}</h1>
+        </div>
         
-        <p>Welcome to {{ config('app.name') }}! Your account has been successfully created and you now have access to our systems.</p>
-        
-        @if($recoveryLink)
-            <div class="credentials">
-                <h3>🔑 Account Setup Required</h3>
-                <p><strong>Your Username:</strong> <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">{{ $user['username'] }}</code></p>
-                <p><strong>Your Email:</strong> <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">{{ $user['email'] }}</code></p>
-                <p><strong>Next Step:</strong> Click the button below to set up your password</p>
-            </div>
+        <div class="content">
+            <h2>Welcome aboard!</h2>
             
-            <div style="text-align: center; margin: 20px 0;">
-                <a href="{{ $recoveryLink }}" class="button">🚀 Set Up Your Password</a>
-            </div>
+            <p>Hello {{ $user['name'] ?: $user['username'] }},</p>
             
-            <div class="warning">
-                <strong>📋 Setup Instructions:</strong>
-                <ol style="margin: 10px 0; padding-left: 20px;">
-                    <li><strong>Click the "Set Up Your Password" button above</strong></li>
-                    <li><strong>When prompted, enter your email:</strong> <code style="background: #fff; padding: 1px 4px;">{{ $user['email'] }}</code></li>
-                    <li><strong>Or enter your username:</strong> <code style="background: #fff; padding: 1px 4px;">{{ $user['username'] }}</code></li>
-                    <li><strong>Create a strong password</strong> (minimum 8 characters recommended)</li>
-                    <li><strong>Complete the setup</strong> and you'll be ready to log in!</li>
-                </ol>
-                <p style="margin-top: 15px;"><strong>💡 Pro tip:</strong> Copy your email or username from above to avoid typos!</p>
-            </div>
-        @elseif($password)
-            <div class="credentials">
-                <h3>Your Login Credentials</h3>
-                <p><strong>Username:</strong> {{ $user['username'] }}</p>
-                <p><strong>Temporary Password:</strong> <code>{{ $password }}</code></p>
-                <p><strong>Email:</strong> {{ $user['email'] }}</p>
-            </div>
+            <p>Welcome to {{ config('app.name') }}! Your account has been successfully created and you now have access to our platform.</p>
             
-            <div class="warning">
-                <strong>Important Security Notice:</strong>
-                <ul>
-                    <li>This is a temporary password that you will be required to change on your first login</li>
-                    <li>Please keep this information secure and do not share it with anyone</li>
-                    <li>Delete this email after you have successfully logged in and changed your password</li>
-                </ul>
-            </div>
-        @else
-            <div class="credentials">
-                <h3>Your Account</h3>
-                <p><strong>Username:</strong> {{ $user['username'] }}</p>
-                <p><strong>Email:</strong> {{ $user['email'] }}</p>
-                <p>Please contact your administrator for password setup instructions.</p>
-            </div>
-        @endif
+            @if($recoveryLink)
+                <div class="credentials-box">
+                    <h3>🔑 Your Account Details</h3>
+                    <p><strong>Username:</strong> <span class="credential-value">{{ $user['username'] }}</span></p>
+                    <p><strong>Email:</strong> <span class="credential-value">{{ $user['email'] }}</span></p>
+                </div>
+                
+                <div style="text-align: center;">
+                    <a href="{{ $recoveryLink }}" class="action-button">🚀 Set Up Your Password</a>
+                </div>
+                
+                <div class="alternative-link">
+                    <p><strong>Button not working?</strong> Copy and paste this link into your web browser:</p>
+                    <p><a href="{{ $recoveryLink }}">{{ $recoveryLink }}</a></p>
+                </div>
+                
+                <div class="instructions-box">
+                    <h3>📋 Setup Instructions</h3>
+                    <ol>
+                        <li><strong>Click the "🚀 Set Up Your Password" button above</strong></li>
+                        <li><strong>When prompted, enter your credentials:</strong>
+                            <ul style="margin: 5px 0; padding-left: 20px;">
+                                <li>Email: <span class="credential-value">{{ $user['email'] }}</span></li>
+                                <li>OR Username: <span class="credential-value">{{ $user['username'] }}</span></li>
+                            </ul>
+                        </li>
+                        <li><strong>Create a strong password</strong> (minimum 8 characters recommended)</li>
+                        <li><strong>Complete the setup</strong> and you'll be ready to explore!</li>
+                    </ol>
+                </div>
+            @elseif($password)
+                <div class="credentials-box">
+                    <h3>🔑 Your Login Credentials</h3>
+                    <p><strong>Username:</strong> <span class="credential-value">{{ $user['username'] }}</span></p>
+                    <p><strong>Temporary Password:</strong> <span class="credential-value">{{ $password }}</span></p>
+                    <p><strong>Email:</strong> <span class="credential-value">{{ $user['email'] }}</span></p>
+                </div>
+                
+                <div class="warning-box">
+                    <p><strong>Security Notice:</strong> This is a temporary password that you will be required to change on your first login. Please keep this information secure and delete this email after you have successfully logged in and changed your password.</p>
+                </div>
+                
+                <div style="text-align: center;">
+                    <a href="{{ $loginUrl }}" class="action-button">Login to {{ config('app.name') }}</a>
+                </div>
+            @else
+                <div class="credentials-box">
+                    <h3>� Your Account</h3>
+                    <p><strong>Username:</strong> <span class="credential-value">{{ $user['username'] }}</span></p>
+                    <p><strong>Email:</strong> <span class="credential-value">{{ $user['email'] }}</span></p>
+                    <p>Please contact your administrator for password setup instructions.</p>
+                </div>
+                
+                <div style="text-align: center;">
+                    <a href="{{ $loginUrl }}" class="action-button">Visit {{ config('app.name') }}</a>
+                </div>
+            @endif
+            
+            <p>If you have any questions or need assistance, please don't hesitate to contact your system administrator.</p>
+            
+            <p>Best regards,<br>
+            The {{ config('app.name') }} Team</p>
+        </div>
         
-        <h3>🎯 Getting Started</h3>
-        @if($recoveryLink)
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #007bff;">
-                <p><strong>Follow these simple steps:</strong></p>
-                <ol style="margin: 10px 0; padding-left: 20px;">
-                    <li><strong>Click the "🚀 Set Up Your Password" button above</strong></li>
-                    <li><strong>Enter your details when prompted:</strong>
-                        <ul style="margin: 5px 0;">
-                            <li>Email: <code style="background: #fff; padding: 1px 4px;">{{ $user['email'] }}</code> (you can copy this!)</li>
-                            <li>OR Username: <code style="background: #fff; padding: 1px 4px;">{{ $user['username'] }}</code></li>
-                        </ul>
-                    </li>
-                    <li><strong>Create your password</strong> (make it strong and memorable)</li>
-                    <li><strong>Complete the setup</strong> and bookmark the login page</li>
-                    <li><strong>Start exploring!</strong> You'll have access to all authorized applications</li>
-                </ol>
-            </div>
-        @else
-            <ol>
-                <li>Click the login button below to access the system</li>
-                @if($password)
-                    <li>Use the credentials provided above to sign in</li>
-                    <li>You will be prompted to change your password on first login</li>
-                @endif
-                <li>Complete your profile information if required</li>
-                <li>Explore the available features and applications</li>
-            </ol>
-        @endif
-        
-        @if(!$recoveryLink)
-            <div style="text-align: center;">
-                <a href="{{ $loginUrl }}" class="button">Login to {{ config('app.name') }}</a>
-            </div>
-        @endif
-        
-        <p>Best regards,<br>
-        The {{ config('app.name') }} Team</p>
-    </div>
-    
-    <div class="footer">
-        <p style="margin: 0; font-size: 12px; color: #666;">
-            This email was sent automatically. Please do not reply to this email address.
-        </p>
-        <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">
-            {{ config('app.name') }} | {{ config('app.url') }}
-        </p>
+        <div class="footer">
+            <p>This is an automated message from {{ config('app.name') }}. Please do not reply to this email.</p>
+            <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+        </div>
     </div>
 </body>
 </html>

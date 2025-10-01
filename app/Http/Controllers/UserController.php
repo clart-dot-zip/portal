@@ -694,10 +694,14 @@ class UserController extends Controller
                 return redirect()->back()->with('error', 'User not found');
             }
 
-            // For now, we'll use a direct recovery link to the Authentik recovery page
-            // In a production environment, you might want to create a proper recovery flow
-            $authentikBaseUrl = config('services.authentik.base_url');
-            $recoveryLink = $authentikBaseUrl . '/if/flow/recovery/?email=' . urlencode($authentikUser['email']);
+            // Generate recovery link using Authentik API (same as onboarding)
+            $recoveryResult = $this->authentik->request('POST', "/core/users/{$authentikUser['pk']}/recovery/", []);
+            
+            if (!isset($recoveryResult['link'])) {
+                throw new \Exception('Failed to generate recovery link from Authentik');
+            }
+
+            $recoveryLink = $recoveryResult['link'];
 
             // Send recovery email
             Mail::to($authentikUser['email'])->send(new \App\Mail\PasswordRecoveryEmail(
@@ -708,7 +712,8 @@ class UserController extends Controller
             Log::info('Password recovery email sent', [
                 'user_id' => $id,
                 'username' => $authentikUser['username'],
-                'email' => $authentikUser['email']
+                'email' => $authentikUser['email'],
+                'recovery_link' => $recoveryLink
             ]);
 
             if ($request->expectsJson()) {
