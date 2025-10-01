@@ -6,10 +6,13 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Applications') }}
             </h2>
-            <div class="flex space-x-2">
+            <div class="flex space-x-3">
                 <a href="{{ route('dashboard') }}" 
-                   class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
-                    Dashboard
+                   class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to Dashboard
                 </a>
             </div>
         </div>
@@ -57,7 +60,7 @@
                                     </div>
                                 </div>
                                 <button type="submit" 
-                                        class="inline-flex items-center px-4 py-2 border border-l-0 border-gray-300 rounded-r-md bg-gray-50 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-r-lg transition-colors duration-200">
                                     Search
                                 </button>
                             </form>
@@ -67,7 +70,7 @@
                         <div class="flex items-center space-x-3">
                             @if($search)
                                 <a href="{{ route('applications.index') }}" 
-                                   class="text-gray-600 hover:text-gray-900 text-sm">
+                                   class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
                                     Clear Search
                                 </a>
                             @endif
@@ -140,17 +143,17 @@
                                             <!-- Action Buttons -->
                                             <div class="flex space-x-2">
                                                 <a href="{{ route('applications.show', $application['pk']) }}" 
-                                                   class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                   class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-md transition-colors duration-200 inline-block">
                                                     View Details
                                                 </a>
                                                 <a href="{{ route('applications.edit', $application['pk']) }}" 
-                                                   class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                   class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-1 px-3 rounded-md transition-colors duration-200 inline-block">
                                                     Manage Access
                                                 </a>
                                                 @if(isset($application['meta_launch_url']) && $application['meta_launch_url'])
                                                     <a href="{{ $application['meta_launch_url'] }}" 
                                                        target="_blank"
-                                                       class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                                       class="bg-green-600 hover:bg-green-700 text-white font-medium py-1 px-3 rounded-md transition-colors duration-200 inline-block">
                                                         Launch
                                                         <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>

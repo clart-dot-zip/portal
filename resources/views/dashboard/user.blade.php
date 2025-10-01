@@ -7,9 +7,9 @@
                 {{ __('Dashboard') }}
             </h2>
             @if($isPortalAdmin)
-                <div class="flex space-x-2">
+                <div class="flex space-x-3">
                     <a href="{{ route('admin.dashboard') }}" 
-                       class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline inline-flex items-center">
+                       class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>

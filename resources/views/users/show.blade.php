@@ -6,14 +6,17 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('User Details') }}: {{ $authentikUser['username'] }}
             </h2>
-            <div class="flex space-x-2">
-                <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded delete-user-btn"
+            <div class="flex space-x-3">
+                <button class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 delete-user-btn"
                         data-user-id="{{ $authentikUser['pk'] }}"
                         data-username="{{ $authentikUser['username'] }}">
                     Delete User
                 </button>
                 <a href="{{ route('users.index') }}" 
-                   class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                   class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
                     Back to Users
                 </a>
             </div>

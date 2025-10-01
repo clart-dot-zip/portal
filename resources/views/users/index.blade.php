@@ -6,16 +6,16 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Users Management') }}
             </h2>
-            <div class="flex space-x-2">
+            <div class="flex space-x-3">
                 <a href="{{ route('users.onboard') }}" 
-                   class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline inline-flex items-center">
+                   class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                     Onboard User
                 </a>
                 <button id="sync-users-btn" 
-                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline inline-flex items-center">
+                        class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center">
                     <span id="sync-spinner" class="hidden">
                         <svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -65,12 +65,12 @@
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         <button type="submit" 
-                                class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                                class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
                             Search
                         </button>
                         @if($search ?? false)
                             <a href="{{ route('users.index') }}" 
-                               class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                               class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
                                 Clear
                             </a>
                         @endif
@@ -188,7 +188,7 @@
                                                             User
                                                         </span>
                                                     @endif
-                                                    <button class="toggle-admin-btn text-xs {{ $user['is_portal_admin'] ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900' }}"
+                                                    <button class="toggle-admin-btn text-xs font-medium py-1 px-2 rounded transition-colors duration-200 {{ $user['is_portal_admin'] ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200' }}"
                                                             data-user-id="{{ $user['id'] }}"
                                                             data-username="{{ $user['username'] }}"
                                                             data-is-admin="{{ $user['is_portal_admin'] ? 'true' : 'false' }}">
@@ -201,10 +201,14 @@
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                                 <a href="{{ route('users.show', $user['id']) }}" 
-                                                   class="text-blue-600 hover:text-blue-900">View</a>
-                                                <button class="text-red-600 hover:text-red-900 delete-user-btn"
+                                                   class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-md transition-colors duration-200 inline-block">
+                                                   View
+                                                </a>
+                                                <button class="bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded-md transition-colors duration-200 delete-user-btn"
                                                         data-user-id="{{ $user['id'] }}"
-                                                        data-username="{{ $user['username'] }}">Delete</button>
+                                                        data-username="{{ $user['username'] }}">
+                                                        Delete
+                                                </button>
                                             </td>
                                         </tr>
                                     @endforeach
