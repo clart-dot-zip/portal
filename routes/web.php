@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AuthentikController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\GroupController;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('index');
         Route::get('/{id}', [UserController::class, 'show'])->name('show');
         Route::post('/sync', [UserController::class, 'sync'])->name('sync');
+    });
+    
+    // Group Management Routes
+    Route::prefix('groups')->name('groups.')->group(function () {
+        Route::get('/', [GroupController::class, 'index'])->name('index');
+        Route::get('/{id}', [GroupController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [GroupController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [GroupController::class, 'update'])->name('update');
+        Route::post('/sync', [GroupController::class, 'sync'])->name('sync');
+        Route::post('/{id}/users', [GroupController::class, 'addUser'])->name('add-user');
+        Route::delete('/{id}/users/{userId}', [GroupController::class, 'removeUser'])->name('remove-user');
     });
     
     // Authentik Management Routes

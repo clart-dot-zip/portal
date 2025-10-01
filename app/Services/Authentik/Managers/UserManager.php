@@ -108,44 +108,45 @@ class UserManager extends BaseManager
     }
 
     /**
-     * Get user's groups (alternative method using groups endpoint)
+     * Get user's groups
      */
     public function getGroups(string $userId): array
     {
-        // Try the direct user groups endpoint first
         try {
-            return $this->client->get("/core/users/{$userId}/groups/");
-        } catch (\Exception $e) {
-            // If that fails, try getting groups and filtering by user
-            try {
-                $allGroups = $this->client->get("/core/groups/");
-                $userGroups = [];
-                
-                if (isset($allGroups['results'])) {
-                    foreach ($allGroups['results'] as $group) {
-                        // Check if this group contains our user
-                        try {
-                            $members = $this->client->get("/core/groups/{$group['pk']}/users/");
-                            if (isset($members['results'])) {
-                                foreach ($members['results'] as $member) {
-                                    if ($member['pk'] === $userId) {
-                                        $userGroups[] = $group;
-                                        break;
-                                    }
-                                }
-                            }
-                        } catch (\Exception $memberException) {
-                            // Skip this group if we can't get members
-                            continue;
-                        }
-                    }
-                }
-                
-                return $userGroups;
-            } catch (\Exception $fallbackException) {
-                // If all methods fail, return empty array
+            // Get user details first to check their groups
+            $user = $this->get($userId);
+            
+            if (!isset($user['groups']) || !is_array($user['groups']) || empty($user['groups'])) {
+                // User has no groups
                 return [];
             }
+            
+            // Fetch full group details for each group ID
+            $groups = [];
+            foreach ($user['groups'] as $groupId) {
+                try {
+                    $group = $this->client->get("/core/groups/{$groupId}/");
+                    $groups[] = $group;
+                } catch (\Exception $groupException) {
+                    // Skip this group if we can't fetch it, but log the error
+                    \Illuminate\Support\Facades\Log::warning('Failed to fetch group details', [
+                        'group_id' => $groupId,
+                        'user_id' => $userId,
+                        'error' => $groupException->getMessage()
+                    ]);
+                    continue;
+                }
+            }
+            
+            return $groups;
+            
+        } catch (\Exception $e) {
+            // If we can't get user details, return empty array
+            \Illuminate\Support\Facades\Log::warning('Failed to get user groups', [
+                'user_id' => $userId,
+                'error' => $e->getMessage()
+            ]);
+            return [];
         }
     }
 

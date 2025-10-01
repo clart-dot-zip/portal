@@ -32,11 +32,26 @@ class GroupManager extends BaseManager
     }
 
     /**
+     * Get group members (alias for getMembers)
+     */
+    public function getUsers(string $groupId): array
+    {
+        return $this->getMembers($groupId);
+    }
+
+    /**
      * Get group members
      */
     public function getMembers(string $groupId): array
     {
-        return $this->client->get("/core/groups/{$groupId}/users");
+        try {
+            // Use the correct endpoint to get users by group
+            $result = $this->client->get("/core/users/?groups={$groupId}");
+            return $result['results'] ?? $result;
+        } catch (\Exception $e) {
+            // Fallback: return empty array
+            return [];
+        }
     }
 
     /**
