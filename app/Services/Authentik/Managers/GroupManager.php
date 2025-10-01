@@ -45,9 +45,40 @@ class GroupManager extends BaseManager
     public function getMembers(string $groupId): array
     {
         try {
-            // Use the correct endpoint to get users by group
+            // First, get the group details which contains the user IDs
+            $group = $this->get($groupId);
+            
+            // Check if the group has a users array with user IDs
+            if (isset($group['users']) && is_array($group['users']) && count($group['users']) > 0) {
+                // Get all users first, then filter by the group's user IDs
+                $allUsersResult = $this->client->get("/core/users/");
+                $allUsers = $allUsersResult['results'] ?? $allUsersResult;
+                
+                // Filter users that are members of this group
+                $members = [];
+                foreach ($allUsers as $user) {
+                    if (in_array($user['pk'], $group['users'])) {
+                        $members[] = $user;
+                    }
+                }
+                return $members;
+            }
+            
+            // Fallback: try the users endpoint with groups filter
             $result = $this->client->get("/core/users/?groups={$groupId}");
-            return $result['results'] ?? $result;
+            $users = $result['results'] ?? $result;
+            
+            // If this returns all users (common API issue), return empty array
+            // We can detect this by checking if the count matches what we expect
+            $allUsersResult = $this->client->get("/core/users/");
+            $allUsers = $allUsersResult['results'] ?? $allUsersResult;
+            
+            if (count($users) === count($allUsers)) {
+                // API filter not working, return empty array rather than wrong data
+                return [];
+            }
+            
+            return $users;
         } catch (\Exception $e) {
             // Fallback: return empty array
             return [];
