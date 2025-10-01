@@ -1,3 +1,5 @@
+@section('title', 'Group Details: ' . $group['name'] . ' - ' . config('app.name'))
+
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
