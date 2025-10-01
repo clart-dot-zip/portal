@@ -327,7 +327,7 @@ class GroupController extends Controller
                 throw new \Exception('Sync command failed with exit code: ' . $exitCode);
             }
 
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Groups synced successfully!'
@@ -339,7 +339,7 @@ class GroupController extends Controller
         } catch (\Exception $e) {
             Log::error('Groups sync failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Sync failed: ' . $e->getMessage()

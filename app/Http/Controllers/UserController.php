@@ -116,7 +116,7 @@ class UserController extends Controller
             $output = Artisan::output();
             Log::info('Artisan output', ['output' => $output]);
             
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Users synced successfully!',
@@ -129,7 +129,7 @@ class UserController extends Controller
         } catch (\Exception $e) {
             Log::error('Sync failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Sync failed: ' . $e->getMessage()
