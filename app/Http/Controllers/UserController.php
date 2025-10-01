@@ -36,25 +36,30 @@ class UserController extends Controller
             // Get users from local database
             $localUsers = User::all();
             
+            // Get Portal admin group members efficiently (single API call)
+            $portalAdminUserIds = [];
+            if ($this->authentik) {
+                try {
+                    $groups = $this->authentik->groups()->all();
+                    $portalAdminGroup = collect($groups)->first(function ($group) {
+                        return strtolower(trim($group['name'])) === 'portal admin';
+                    });
+                    
+                    if ($portalAdminGroup) {
+                        $groupUsers = $this->authentik->groups()->getUsers($portalAdminGroup['pk']);
+                        $portalAdminUserIds = collect($groupUsers)->pluck('pk')->toArray();
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Failed to fetch Portal admin group: ' . $e->getMessage());
+                }
+            }
+            
             // Merge and organize the data
-            $allUsers = collect($authentikUsers)->map(function ($authentikUser) use ($localUsers) {
+            $allUsers = collect($authentikUsers)->map(function ($authentikUser) use ($localUsers, $portalAdminUserIds) {
                 $localUser = $localUsers->firstWhere('authentik_id', $authentikUser['pk']);
                 
-                // Check if user is Portal admin
-                $isPortalAdmin = false;
-                if ($this->authentik) {
-                    try {
-                        $userGroups = $this->authentik->users()->getGroups($authentikUser['pk']);
-                        foreach ($userGroups as $group) {
-                            if (strtolower(trim($group['name'])) === 'portal admin') {
-                                $isPortalAdmin = true;
-                                break;
-                            }
-                        }
-                    } catch (\Exception $e) {
-                        // Ignore group fetch errors for listing
-                    }
-                }
+                // Check if user is Portal admin (from pre-fetched list)
+                $isPortalAdmin = in_array($authentikUser['pk'], $portalAdminUserIds);
                 
                 return [
                     'id' => $authentikUser['pk'],
