@@ -4,10 +4,17 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('User Details') }}: {{ $authentikUser['username'] }}
             </h2>
-            <a href="{{ route('users.index') }}" 
-               class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
-                Back to Users
-            </a>
+            <div class="flex space-x-2">
+                <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded delete-user-btn"
+                        data-user-id="{{ $authentikUser['pk'] }}"
+                        data-username="{{ $authentikUser['username'] }}">
+                    Delete User
+                </button>
+                <a href="{{ route('users.index') }}" 
+                   class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                    Back to Users
+                </a>
+            </div>
         </div>
     </x-slot>
 
@@ -178,4 +185,73 @@
             @endif
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Delete user button handler
+            const deleteBtn = document.querySelector('.delete-user-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function() {
+                    const userId = this.dataset.userId;
+                    const username = this.dataset.username;
+                    deleteUser(userId, username);
+                });
+            }
+
+            function deleteUser(userId, username) {
+                if (!confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
+                    return;
+                }
+
+                fetch(`{{ url('users') }}/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showMessage(data.message, 'success');
+                        // Redirect to users index after successful deletion
+                        setTimeout(() => {
+                            window.location.href = '{{ route("users.index") }}';
+                        }, 1000);
+                    } else {
+                        showMessage(data.message || 'Failed to delete user', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Delete user error:', error);
+                    showMessage('Failed to delete user: ' + error.message, 'error');
+                });
+            }
+
+            function showMessage(message, type) {
+                // Create message element
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `mb-4 px-4 py-3 rounded relative ${type === 'success' ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'}`;
+                messageDiv.innerHTML = `<span class="block sm:inline">${message}</span>`;
+
+                // Insert at top of main content
+                const mainContent = document.querySelector('.py-12 .max-w-7xl');
+                if (mainContent) {
+                    mainContent.insertBefore(messageDiv, mainContent.firstChild);
+
+                    // Auto-remove after 5 seconds
+                    setTimeout(() => {
+                        messageDiv.remove();
+                    }, 5000);
+                }
+            }
+        });
+    </script>
 </x-app-layout>

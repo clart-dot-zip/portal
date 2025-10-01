@@ -34,6 +34,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/onboard', [UserController::class, 'onboard'])->name('onboard');
         Route::post('/onboard', [UserController::class, 'processOnboard'])->name('onboard.process');
         Route::get('/{id}', [UserController::class, 'show'])->name('show');
+        Route::delete('/{id}', [UserController::class, 'destroy'])->name('destroy');
         Route::post('/sync', [UserController::class, 'sync'])->name('sync');
     });
     

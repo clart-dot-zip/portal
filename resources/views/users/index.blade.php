@@ -175,9 +175,12 @@
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {{ $user['last_login'] ? \Carbon\Carbon::parse($user['last_login'])->diffForHumans() : 'Never' }}
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                                 <a href="{{ route('users.show', $user['id']) }}" 
                                                    class="text-blue-600 hover:text-blue-900">View</a>
+                                                <button class="text-red-600 hover:text-red-900 delete-user-btn"
+                                                        data-user-id="{{ $user['id'] }}"
+                                                        data-username="{{ $user['username'] }}">Delete</button>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -296,6 +299,52 @@
                         syncIcon.classList.remove('hidden');
                         syncText.textContent = 'Sync Users';
                     });
+                });
+            }
+
+            // Delete user button handlers
+            document.querySelectorAll('.delete-user-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const userId = this.dataset.userId;
+                    const username = this.dataset.username;
+                    deleteUser(userId, username);
+                });
+            });
+
+            function deleteUser(userId, username) {
+                if (!confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
+                    return;
+                }
+
+                fetch(`{{ url('users') }}/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showMessage(data.message, 'success');
+                        // Reload page to show updated data
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        showMessage(data.message || 'Failed to delete user', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Delete user error:', error);
+                    showMessage('Failed to delete user: ' + error.message, 'error');
                 });
             }
 

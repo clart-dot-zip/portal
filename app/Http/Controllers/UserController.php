@@ -7,6 +7,7 @@ use App\Services\Authentik\AuthentikSDK;
 use App\Models\User;
 use App\Mail\WelcomeEmail;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -381,6 +382,64 @@ class UserController extends Controller
                 'error' => $e->getMessage()
             ]);
             throw $e; // Re-throw so calling code can handle it
+        }
+    }
+
+    /**
+     * Delete a user
+     */
+    public function destroy($id, Request $request)
+    {
+        try {
+            if (!$this->authentik) {
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Authentik SDK not initialized'], 500);
+                }
+                return redirect()->route('users.index')->with('error', 'Authentik SDK not initialized');
+            }
+
+            // Get user details before deletion for logging
+            $user = $this->authentik->users()->get($id);
+            
+            // Delete user from Authentik
+            $this->authentik->users()->delete($id);
+            
+            // Also delete from local database if exists
+            $localUser = \App\Models\User::where('authentik_id', $id)->first();
+            if ($localUser) {
+                $localUser->delete();
+            }
+
+            Log::info('User deleted successfully', [
+                'user_id' => $id,
+                'username' => $user['username'] ?? 'unknown',
+                'deleted_by' => Auth::user()->username ?? 'system'
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true, 
+                    'message' => 'User deleted successfully'
+                ]);
+            }
+
+            return redirect()->route('users.index')->with('success', 'User deleted successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Failed to delete user', [
+                'user_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Failed to delete user: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->route('users.index')->with('error', 'Failed to delete user: ' . $e->getMessage());
         }
     }
 }
