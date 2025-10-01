@@ -116,12 +116,25 @@ class UserController extends Controller
             $authentikUser = $this->authentik->users()->get($id);
             $localUser = User::where('authentik_id', $id)->first();
             
-            // Get user's groups
-            $groups = $this->authentik->users()->getGroups($id);
+            // Try to get user's groups, but handle failure gracefully
+            $groups = [];
+            try {
+                $groups = $this->authentik->users()->getGroups($id);
+            } catch (\Exception $e) {
+                Log::warning('Failed to get user groups', [
+                    'user_id' => $id, 
+                    'error' => $e->getMessage()
+                ]);
+                // Continue without groups data
+            }
             
             return view('users.show', compact('authentikUser', 'localUser', 'groups'));
             
         } catch (\Exception $e) {
+            Log::error('Failed to get user details', [
+                'user_id' => $id, 
+                'error' => $e->getMessage()
+            ]);
             return redirect()->route('users.index')->with('error', 'User not found: ' . $e->getMessage());
         }
     }

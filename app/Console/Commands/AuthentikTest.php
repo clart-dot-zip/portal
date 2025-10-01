@@ -111,11 +111,6 @@ class AuthentikTest extends Command
         try {
             $sdk = new AuthentikSDK($apiToken);
             
-            // Test the exact same call that works
-            $this->info('Testing paginate method directly...');
-            $result = $sdk->client()->paginate('/core/users/', ['page_size' => 1]);
-            $this->info('Paginate method successful: ' . json_encode(array_keys($result)));
-            
             // Test users manager list method
             $this->info('Testing users list method...');
             $users = $sdk->users()->list(['page_size' => 1]);
@@ -124,9 +119,50 @@ class AuthentikTest extends Command
             // Test get individual user if any users exist
             if (isset($users['results']) && count($users['results']) > 0) {
                 $firstUser = $users['results'][0];
-                $this->info('Testing get individual user: ' . $firstUser['username']);
+                $this->info('Testing complete user detail flow...');
+                $this->info('User: ' . $firstUser['username'] . ' (ID: ' . $firstUser['pk'] . ')');
+                
+                // Test individual user retrieval
                 $userDetail = $sdk->users()->get($firstUser['pk']);
                 $this->info('✓ User detail retrieved: ' . $userDetail['username']);
+                
+                // Check what's in the user detail
+                $this->info('User detail keys: ' . implode(', ', array_keys($userDetail)));
+                
+                // Test groups in user detail
+                if (isset($userDetail['groups'])) {
+                    $this->info('✓ User has groups in detail: ' . count($userDetail['groups']));
+                    if (count($userDetail['groups']) > 0) {
+                        foreach ($userDetail['groups'] as $groupId) {
+                            $this->info('  - Group ID: ' . $groupId);
+                        }
+                    }
+                } else {
+                    $this->info('ℹ User detail does not contain groups');
+                }
+                
+                // Test getGroups method
+                $this->info('Testing getGroups method...');
+                try {
+                    $groups = $sdk->users()->getGroups($firstUser['pk']);
+                    $this->info('✓ User groups retrieved: ' . count($groups));
+                    if (count($groups) > 0) {
+                        foreach ($groups as $group) {
+                            $this->info('  - ' . $group['name'] . ' (ID: ' . $group['pk'] . ')');
+                        }
+                    }
+                } catch (\Exception $e) {
+                    $this->error('✗ User groups failed: ' . $e->getMessage());
+                }
+                
+                // Test controller instantiation
+                $this->info('Testing controller...');
+                try {
+                    $controller = new \App\Http\Controllers\UserController();
+                    $this->info('✓ UserController can be instantiated');
+                } catch (\Exception $e) {
+                    $this->error('✗ UserController failed: ' . $e->getMessage());
+                }
             }
             
         } catch (\Exception $e) {

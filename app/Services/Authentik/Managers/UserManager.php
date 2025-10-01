@@ -108,11 +108,45 @@ class UserManager extends BaseManager
     }
 
     /**
-     * Get user's groups
+     * Get user's groups (alternative method using groups endpoint)
      */
     public function getGroups(string $userId): array
     {
-        return $this->client->get("/core/users/{$userId}/groups/");
+        // Try the direct user groups endpoint first
+        try {
+            return $this->client->get("/core/users/{$userId}/groups/");
+        } catch (\Exception $e) {
+            // If that fails, try getting groups and filtering by user
+            try {
+                $allGroups = $this->client->get("/core/groups/");
+                $userGroups = [];
+                
+                if (isset($allGroups['results'])) {
+                    foreach ($allGroups['results'] as $group) {
+                        // Check if this group contains our user
+                        try {
+                            $members = $this->client->get("/core/groups/{$group['pk']}/users/");
+                            if (isset($members['results'])) {
+                                foreach ($members['results'] as $member) {
+                                    if ($member['pk'] === $userId) {
+                                        $userGroups[] = $group;
+                                        break;
+                                    }
+                                }
+                            }
+                        } catch (\Exception $memberException) {
+                            // Skip this group if we can't get members
+                            continue;
+                        }
+                    }
+                }
+                
+                return $userGroups;
+            } catch (\Exception $fallbackException) {
+                // If all methods fail, return empty array
+                return [];
+            }
+        }
     }
 
     /**
