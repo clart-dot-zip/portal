@@ -200,7 +200,16 @@ class GroupController extends Controller
             }
 
             if ($request->filled('attributes')) {
-                $updateData['attributes'] = json_decode($request->input('attributes'), true);
+                $decodedAttributes = json_decode($request->input('attributes'), true);
+                
+                // Only include attributes if it's not empty or null
+                // Send as object if empty, or don't send at all
+                if (!empty($decodedAttributes)) {
+                    $updateData['attributes'] = $decodedAttributes;
+                } else {
+                    // For empty attributes, send as empty object instead of empty array
+                    $updateData['attributes'] = (object)[];
+                }
             }
 
             $this->authentik->groups()->update($id, $updateData);
