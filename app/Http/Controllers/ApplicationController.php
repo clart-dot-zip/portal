@@ -154,15 +154,46 @@ class ApplicationController extends Controller
 
             // Get current policy bindings for this application
             $policyBindings = [];
+            $accessStats = [
+                'direct_users' => 0,
+                'groups' => 0,
+                'total_policies' => 0
+            ];
+            
             try {
                 $bindingsResult = $this->authentik->request('GET', '/policies/bindings/', [
                     'target' => $id
                 ]);
                 $policyBindings = $bindingsResult['results'] ?? [];
                 
-                Log::info('Retrieved policy bindings for application', [
+                // Calculate statistics server-side to avoid caching issues
+                $userBindings = 0;
+                $groupBindings = 0;
+                $uniqueUsers = [];
+                $uniqueGroups = [];
+                
+                foreach ($policyBindings as $binding) {
+                    if (isset($binding['user']) && $binding['user'] && !isset($binding['group']) && !isset($binding['policy'])) {
+                        $userBindings++;
+                        $uniqueUsers[$binding['user']] = true;
+                    }
+                    if (isset($binding['group']) && $binding['group'] && !isset($binding['user']) && !isset($binding['policy'])) {
+                        $groupBindings++;
+                        $uniqueGroups[$binding['group']] = true;
+                    }
+                }
+                
+                $accessStats = [
+                    'direct_users' => count($uniqueUsers),
+                    'groups' => count($uniqueGroups),
+                    'total_policies' => count($policyBindings)
+                ];
+                
+                Log::info('Retrieved policy bindings for application with stats', [
                     'application_id' => $id,
-                    'bindings_count' => count($policyBindings)
+                    'bindings_count' => count($policyBindings),
+                    'stats' => $accessStats,
+                    'sample_bindings' => array_slice($policyBindings, 0, 3)
                 ]);
             } catch (\Exception $e) {
                 Log::warning('Failed to get policy bindings for application', [
@@ -171,7 +202,7 @@ class ApplicationController extends Controller
                 ]);
             }
 
-            return view('applications.show', compact('application', 'allUsers', 'allGroups', 'policyBindings'));
+            return view('applications.show', compact('application', 'allUsers', 'allGroups', 'policyBindings', 'accessStats'));
 
         } catch (\Exception $e) {
             Log::error('Failed to get application details', [

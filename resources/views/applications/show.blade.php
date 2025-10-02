@@ -140,7 +140,7 @@
                                 </div>
                                 <div class="ml-4">
                                     <p class="text-sm font-medium text-blue-600">Direct User Access</p>
-                                    <p class="text-2xl font-semibold text-blue-900" id="userAccessCount">-</p>
+                                    <p class="text-2xl font-semibold text-blue-900">{{ $accessStats['direct_users'] ?? 0 }}</p>
                                 </div>
                             </div>
                         </div>
@@ -155,7 +155,7 @@
                                 </div>
                                 <div class="ml-4">
                                     <p class="text-sm font-medium text-green-600">Group Access</p>
-                                    <p class="text-2xl font-semibold text-green-900" id="groupAccessCount">-</p>
+                                    <p class="text-2xl font-semibold text-green-900">{{ $accessStats['groups'] ?? 0 }}</p>
                                 </div>
                             </div>
                         </div>
@@ -170,7 +170,7 @@
                                 </div>
                                 <div class="ml-4">
                                     <p class="text-sm font-medium text-purple-600">Total Policies</p>
-                                    <p class="text-2xl font-semibold text-purple-900" id="totalPolicyCount">-</p>
+                                    <p class="text-2xl font-semibold text-purple-900">{{ $accessStats['total_policies'] ?? 0 }}</p>
                                 </div>
                             </div>
                         </div>
@@ -232,39 +232,5 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load access statistics from server data
-            loadAccessStatistics();
-        });
-
-        function loadAccessStatistics() {
-            // Use the policy bindings data passed from the controller
-            const policyBindings = {!! json_encode($policyBindings ?? []) !!};
-            
-            // Count users and groups with access
-            let userCount = 0;
-            let groupCount = 0;
-            
-            policyBindings.forEach(binding => {
-                if (binding.user) {
-                    userCount++;
-                }
-                if (binding.group) {
-                    groupCount++;
-                }
-            });
-            
-            document.getElementById('userAccessCount').textContent = userCount;
-            document.getElementById('groupAccessCount').textContent = groupCount;
-            document.getElementById('totalPolicyCount').textContent = policyBindings.length;
-            
-            console.log('Policy bindings loaded:', {
-                total: policyBindings.length,
-                users: userCount,
-                groups: groupCount,
-                bindings: policyBindings
-            });
-        }
-    </script>
+    <!-- Statistics are now calculated server-side for accuracy -->
 </x-app-layout>
