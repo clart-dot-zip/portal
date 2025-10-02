@@ -12,8 +12,24 @@ class ApplicationController extends Controller
 
     public function __construct()
     {
-        try {
-            $apiToken = config('services.authentik.api_token');
+              try {
+                // Try to get all policy bindings and filter by target
+                $bindingsResult = $this->authentik->request('GET', '/policies/bindings/', [
+                    'page_size' => 100
+                ]);
+                $allBindings = $bindingsResult['results'] ?? [];
+                
+                // Filter bindings for this specific application
+                $policyBindings = array_filter($allBindings, function($binding) use ($id) {
+                    return isset($binding['target']) && $binding['target'] === $id;
+                });
+                
+                Log::info('Policy bindings filtering for application edit', [
+                    'application_id' => $id,
+                    'total_bindings_from_api' => count($allBindings),
+                    'filtered_bindings_for_app' => count($policyBindings),
+                    'sample_filtered_bindings' => array_slice($policyBindings, 0, 3)
+                ]);            $apiToken = config('services.authentik.api_token');
             if ($apiToken) {
                 $this->authentik = new AuthentikSDK($apiToken);
             }
@@ -222,6 +238,12 @@ class ApplicationController extends Controller
             return redirect()->route('applications.index')->with('error', 'Authentik SDK is not available.');
         }
 
+        Log::info('Starting application edit for ID', [
+            'application_id' => $id,
+            'id_type' => gettype($id),
+            'id_length' => strlen($id)
+        ]);
+
         try {
             // First check if the application exists by getting the current list
             $allAppsResult = $this->authentik->applications()->list(['page_size' => 100]);
@@ -272,10 +294,31 @@ class ApplicationController extends Controller
             $policyBindings = [];
             
             try {
+                // Get policy bindings and filter more strictly
                 $bindingsResult = $this->authentik->request('GET', '/policies/bindings/', [
-                    'target' => $id
+                    'page_size' => 200
                 ]);
-                $policyBindings = $bindingsResult['results'] ?? [];
+                $allBindings = $bindingsResult['results'] ?? [];
+                
+                // Filter bindings for this specific application with strict matching
+                $policyBindings = [];
+                foreach ($allBindings as $binding) {
+                    if (isset($binding['target']) && 
+                        $binding['target'] === $id && 
+                        ($binding['group'] || $binding['user']) && 
+                        !$binding['policy']) {
+                        $policyBindings[] = $binding;
+                    }
+                }
+                
+                Log::info('Policy bindings strict filtering for application edit', [
+                    'application_id' => $id,
+                    'id_type' => gettype($id),
+                    'total_bindings_from_api' => count($allBindings),
+                    'strict_filtered_bindings' => count($policyBindings),
+                    'sample_all_targets' => array_map(function($b) { return $b['target'] ?? 'null'; }, array_slice($allBindings, 0, 10)),
+                    'sample_filtered_bindings' => array_slice($policyBindings, 0, 3)
+                ]);
                 
                 // Convert policy bindings to currentAccess format for the view
                 $groupBindings = [];
