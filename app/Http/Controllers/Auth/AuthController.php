@@ -21,56 +21,63 @@ class AuthController extends Controller
         try {
             $authentikUser = Socialite::driver('authentik')->user();
             
-            // Get the correct numeric ID from Authentik API using the email
-            $authentikSDK = new AuthentikSDK();
-            $apiUser = $authentikSDK->users()->getByEmail($authentikUser->getEmail());
+            Log::info('Authentication callback data', [
+                'socialite_id' => $authentikUser->getId(),
+                'socialite_email' => $authentikUser->getEmail(),
+                'socialite_name' => $authentikUser->getName()
+            ]);
             
-            $correctAuthentikId = null;
-            if (!empty($apiUser) && isset($apiUser['pk'])) {
-                $correctAuthentikId = (string) $apiUser['pk'];
-            }
+            // First try to find user by the exact email from Socialite
+            $user = User::where('email', $authentikUser->getEmail())->first();
             
-            // Check if user exists by correct authentik_id first
-            $user = null;
-            if ($correctAuthentikId) {
-                $user = User::where('authentik_id', $correctAuthentikId)->first();
-            }
-            
-            if (!$user) {
-                // If not found by authentik_id, check by email
-                $user = User::where('email', $authentikUser->getEmail())->first();
-                
-                if ($user) {
-                    // Log warning if authentik_id is changing
-                    Log::warning('User authentik_id being corrected during login', [
-                        'user_id' => $user->id,
-                        'email' => $user->email,
-                        'old_authentik_id' => $user->authentik_id,
-                        'socialite_id' => $authentikUser->getId(),
-                        'correct_authentik_id' => $correctAuthentikId
-                    ]);
+            // If user exists, check if their authentik_id needs correction
+            if ($user) {
+                // Only do API lookup if the authentik_id looks wrong (is a UUID instead of numeric)
+                if (strlen($user->authentik_id) > 10) { // UUID is much longer than numeric ID
+                    $authentikSDK = new AuthentikSDK();
+                    $apiUser = $authentikSDK->users()->getByEmail($authentikUser->getEmail());
                     
-                    // Update to use the correct numeric ID
-                    if ($correctAuthentikId && $user->authentik_id != $correctAuthentikId) {
+                    if (!empty($apiUser) && isset($apiUser['pk']) && $apiUser['email'] === $authentikUser->getEmail()) {
+                        $correctAuthentikId = (string) $apiUser['pk'];
+                        
+                        Log::warning('Correcting authentik_id for existing user', [
+                            'user_id' => $user->id,
+                            'email' => $user->email,
+                            'old_authentik_id' => $user->authentik_id,
+                            'new_authentik_id' => $correctAuthentikId
+                        ]);
+                        
                         $user->update([
                             'authentik_id' => $correctAuthentikId,
                             'name' => $authentikUser->getName(),
                             'avatar' => $authentikUser->getAvatar(),
                         ]);
+                    } else {
+                        // Just update name and avatar, keep existing authentik_id
+                        $user->update([
+                            'name' => $authentikUser->getName(),
+                            'avatar' => $authentikUser->getAvatar(),
+                        ]);
                     }
                 } else {
-                    // Create new user with correct numeric ID
-                    $user = User::create([
-                        'email' => $authentikUser->getEmail(),
+                    // authentik_id looks correct, just update name and avatar
+                    $user->update([
                         'name' => $authentikUser->getName(),
-                        'authentik_id' => $correctAuthentikId ?: $authentikUser->getId(),
                         'avatar' => $authentikUser->getAvatar(),
                     ]);
                 }
             } else {
-                // User found by authentik_id, just update name and avatar
-                $user->update([
+                // No user found with this email, create new user
+                Log::info('Creating new user from Authentik login', [
+                    'email' => $authentikUser->getEmail(),
                     'name' => $authentikUser->getName(),
+                    'socialite_id' => $authentikUser->getId()
+                ]);
+                
+                $user = User::create([
+                    'email' => $authentikUser->getEmail(),
+                    'name' => $authentikUser->getName(),
+                    'authentik_id' => $authentikUser->getId(), // Use Socialite ID directly for new users
                     'avatar' => $authentikUser->getAvatar(),
                 ]);
             }
