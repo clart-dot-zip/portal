@@ -284,7 +284,8 @@
             const currentAccess = {!! json_encode($currentAccess ?? []) !!};
             const application = {!! json_encode($application) !!};
             
-            console.log('Current access:', currentAccess);
+            console.log('Current access data:', currentAccess);
+            console.log('Current access count:', currentAccess ? currentAccess.length : 0);
             console.log('Application:', application);
             
             setTimeout(() => {

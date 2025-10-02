@@ -278,55 +278,69 @@ class ApplicationController extends Controller
                 $policyBindings = $bindingsResult['results'] ?? [];
                 
                 // Convert policy bindings to currentAccess format for the view
+                $groupBindings = [];
+                $userBindings = [];
+                
                 foreach ($policyBindings as $binding) {
                     if ($binding['group'] && !$binding['user'] && !$binding['policy']) {
-                        // This is a group access binding
-                        $groupDetails = null;
+                        // This is a group access binding - use group_id as key to avoid duplicates
+                        $groupId = $binding['group'];
                         
-                        // Find the group in our groups list
-                        foreach ($groups as $group) {
-                            if ($group['pk'] === $binding['group']) {
-                                $groupDetails = $group;
-                                break;
+                        if (!isset($groupBindings[$groupId])) {
+                            // Find the group in our groups list
+                            $groupDetails = null;
+                            foreach ($groups as $group) {
+                                if ($group['pk'] === $groupId) {
+                                    $groupDetails = $group;
+                                    break;
+                                }
                             }
+                            
+                            $groupBindings[$groupId] = [
+                                'type' => 'group',
+                                'group_id' => $groupId,
+                                'group_name' => $groupDetails ? $groupDetails['name'] : 'Unknown Group',
+                                'binding_id' => $binding['pk'],
+                                'enabled' => $binding['enabled']
+                            ];
                         }
-                        
-                        $currentAccess[] = [
-                            'type' => 'group',
-                            'group_id' => $binding['group'],
-                            'group_name' => $groupDetails ? $groupDetails['name'] : 'Unknown Group',
-                            'binding_id' => $binding['pk'],
-                            'enabled' => $binding['enabled']
-                        ];
                     }
                     
                     if ($binding['user'] && !$binding['group'] && !$binding['policy']) {
-                        // This is a user access binding
-                        $userDetails = null;
+                        // This is a user access binding - use user_id as key to avoid duplicates
+                        $userId = $binding['user'];
                         
-                        // Find the user in our users list
-                        foreach ($users as $user) {
-                            if ($user['pk'] == $binding['user']) {
-                                $userDetails = $user;
-                                break;
+                        if (!isset($userBindings[$userId])) {
+                            // Find the user in our users list
+                            $userDetails = null;
+                            foreach ($users as $user) {
+                                if ($user['pk'] == $userId) {
+                                    $userDetails = $user;
+                                    break;
+                                }
                             }
+                            
+                            $userBindings[$userId] = [
+                                'type' => 'user',
+                                'user_id' => $userId,
+                                'user_name' => $userDetails ? ($userDetails['name'] ?: $userDetails['username']) : 'Unknown User',
+                                'binding_id' => $binding['pk'],
+                                'enabled' => $binding['enabled']
+                            ];
                         }
-                        
-                        $currentAccess[] = [
-                            'type' => 'user',
-                            'user_id' => $binding['user'],
-                            'user_name' => $userDetails ? ($userDetails['name'] ?: $userDetails['username']) : 'Unknown User',
-                            'binding_id' => $binding['pk'],
-                            'enabled' => $binding['enabled']
-                        ];
                     }
                 }
+                
+                // Merge deduplicated bindings into currentAccess
+                $currentAccess = array_merge(array_values($groupBindings), array_values($userBindings));
                 
                 Log::info('Retrieved policy bindings for application edit', [
                     'application_id' => $id,
                     'bindings_count' => count($policyBindings),
                     'group_access_count' => count(array_filter($currentAccess, fn($a) => $a['type'] === 'group')),
-                    'user_access_count' => count(array_filter($currentAccess, fn($a) => $a['type'] === 'user'))
+                    'user_access_count' => count(array_filter($currentAccess, fn($a) => $a['type'] === 'user')),
+                    'raw_bindings' => $policyBindings,
+                    'processed_access' => $currentAccess
                 ]);
                 
             } catch (\Exception $e) {
