@@ -26,6 +26,37 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'username' => fake()->unique()->userName(),
+            'authentik_id' => fake()->uuid(),
+            'is_active' => true,
+            'last_login' => fake()->optional()->dateTimeThisYear(),
+            'authentik_attributes' => [],
+            'avatar' => fake()->optional()->imageUrl(),
         ];
+    }
+
+    /**
+     * Create an admin user
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+            'username' => 'admin',
+            'authentik_attributes' => [
+                'portal_admin' => true
+            ],
+        ]);
+    }
+
+    /**
+     * Create an inactive user
+     */
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_active' => false,
+        ]);
     }
 }

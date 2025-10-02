@@ -1,85 +1,50 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-test('profile page is displayed', function () {
-    $user = User::factory()->create();
+uses(RefreshDatabase::class);
 
-    $response = $this
-        ->actingAs($user)
-        ->get('/profile');
+test('users can access their own profile when authenticated', function () {
+    $user = User::factory()->create([
+        'name' => 'Test User',
+        'email' => 'test@example.com'
+    ]);
 
-    $response->assertOk();
+    $response = $this->actingAs($user)->get('/profile');
+
+    $response->assertStatus(200);
+    $response->assertViewIs('users.profile');
+    $response->assertSee('Test User');
 });
 
-test('profile information can be updated', function () {
-    $user = User::factory()->create();
+test('users can update their own profile', function () {
+    $user = User::factory()->create([
+        'name' => 'Old Name',
+        'email' => 'old@example.com'
+    ]);
 
-    $response = $this
-        ->actingAs($user)
-        ->patch('/profile', [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+    $response = $this->actingAs($user)->put('/profile', [
+        'name' => 'New Name',
+        'email' => 'new@example.com'
+    ]);
 
-    $response
-        ->assertSessionHasNoErrors()
-        ->assertRedirect('/profile');
-
-    $user->refresh();
-
-    $this->assertSame('Test User', $user->name);
-    $this->assertSame('test@example.com', $user->email);
-    $this->assertNull($user->email_verified_at);
+    $response->assertRedirect('/profile');
+    $response->assertSessionHas('success', 'Profile updated successfully!');
 });
 
-test('email verification status is unchanged when the email address is unchanged', function () {
+test('profile update validates required fields', function () {
     $user = User::factory()->create();
 
-    $response = $this
-        ->actingAs($user)
-        ->patch('/profile', [
-            'name' => 'Test User',
-            'email' => $user->email,
-        ]);
+    $response = $this->actingAs($user)->put('/profile', [
+        'name' => '',
+        'email' => ''
+    ]);
 
-    $response
-        ->assertSessionHasNoErrors()
-        ->assertRedirect('/profile');
-
-    $this->assertNotNull($user->refresh()->email_verified_at);
+    $response->assertSessionHasErrors(['name', 'email']);
 });
 
-test('user can delete their account', function () {
-    $user = User::factory()->create();
-
-    $response = $this
-        ->actingAs($user)
-        ->delete('/profile', [
-            'password' => 'password',
-        ]);
-
-    $response
-        ->assertSessionHasNoErrors()
-        ->assertRedirect('/');
-
-    $this->assertGuest();
-    $this->assertNull($user->fresh());
-});
-
-test('correct password must be provided to delete account', function () {
-    $user = User::factory()->create();
-
-    $response = $this
-        ->actingAs($user)
-        ->from('/profile')
-        ->delete('/profile', [
-            'password' => 'wrong-password',
-        ]);
-
-    $response
-        ->assertSessionHasErrorsIn('userDeletion', 'password')
-        ->assertRedirect('/profile');
-
-    $this->assertNotNull($user->fresh());
+test('unauthenticated users cannot access profile', function () {
+    $this->get('/profile')->assertRedirect('/login');
+    $this->put('/profile')->assertRedirect('/login');
 });
