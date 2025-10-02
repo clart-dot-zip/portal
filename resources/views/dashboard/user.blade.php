@@ -182,8 +182,8 @@
                                 <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0">
-                                            @if($app['icon'])
-                                                <img src="{{ $app['icon'] }}" alt="{{ $app['name'] }}" class="h-8 w-8">
+                                            @if(isset($app['meta_icon']) && $app['meta_icon'])
+                                                <img src="{{ $app['meta_icon'] }}" alt="{{ $app['name'] }}" class="h-8 w-8 rounded">
                                             @else
                                                 <div class="h-8 w-8 bg-gray-300 rounded flex items-center justify-center">
                                                     <span class="text-gray-600 text-xs font-medium">{{ substr($app['name'], 0, 2) }}</span>
@@ -192,7 +192,7 @@
                                         </div>
                                         <div class="ml-3">
                                             <h4 class="text-sm font-medium text-gray-900">{{ $app['name'] }}</h4>
-                                            <p class="text-xs text-gray-500">{{ $app['description'] ?? 'Application' }}</p>
+                                            <p class="text-xs text-gray-500">{{ $app['meta_description'] ?? 'Application' }}</p>
                                         </div>
                                     </div>
                                     <div class="mt-3">
