@@ -479,20 +479,29 @@ class ApplicationController extends Controller
                 ], 404);
             }
 
-            // Get existing policy bindings for this application
-            $existingBindings = $this->authentik->request('GET', '/policies/bindings/', [
-                'target' => $id
+            // Get existing policy bindings for this application - fetch all and filter manually
+            $allBindingsResult = $this->authentik->request('GET', '/policies/bindings/', [
+                'page_size' => 200
             ]);
+            
+            $allBindings = $allBindingsResult['results'] ?? [];
+            
+            // Filter bindings for this specific application
+            $existingBindings = array_filter($allBindings, function($binding) use ($id) {
+                return isset($binding['target']) && $binding['target'] === $id;
+            });
 
-            Log::info("Found existing policy bindings", [
-                'count' => count($existingBindings['results']),
+            Log::info("Found existing policy bindings for application", [
+                'application_id' => $id,
+                'total_bindings_fetched' => count($allBindings),
+                'application_bindings_count' => count($existingBindings),
                 'bindings' => array_map(function($b) { 
-                    return ['group' => $b['group'], 'user' => $b['user'], 'policy' => $b['policy']]; 
-                }, $existingBindings['results'])
+                    return ['group' => $b['group'], 'user' => $b['user'], 'policy' => $b['policy'], 'target' => $b['target']]; 
+                }, array_slice($existingBindings, 0, 5))
             ]);
 
             // Check if group is already bound to this application
-            foreach ($existingBindings['results'] as $binding) {
+            foreach ($existingBindings as $binding) {
                 if ($binding['group'] === $groupId) {
                     return response()->json([
                         'success' => false,

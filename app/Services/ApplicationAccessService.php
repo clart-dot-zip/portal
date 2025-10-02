@@ -30,16 +30,20 @@ class ApplicationAccessService
                 return false;
             }
 
-            // Get all policy bindings for this application
+            // Get all policy bindings and filter manually for this application
             $bindingsResult = $this->authentik->request('GET', '/policies/bindings/', [
-                'target' => $applicationId,
-                'page_size' => 100
+                'page_size' => 200
             ]);
             
             $allBindings = $bindingsResult['results'] ?? [];
             
+            // Filter bindings that target this specific application
+            $applicationBindings = array_filter($allBindings, function($binding) use ($applicationId) {
+                return isset($binding['target']) && $binding['target'] === $applicationId;
+            });
+            
             // Filter to only access control bindings (group or user bindings without policies)
-            $accessBindings = array_filter($allBindings, function($binding) {
+            $accessBindings = array_filter($applicationBindings, function($binding) {
                 return ($binding['group'] || $binding['user']) && !$binding['policy'] && $binding['enabled'];
             });
 
@@ -47,6 +51,7 @@ class ApplicationAccessService
                 'application_id' => $applicationId,
                 'user_id' => $userId,
                 'total_bindings' => count($allBindings),
+                'application_bindings' => count($applicationBindings),
                 'access_bindings' => count($accessBindings)
             ]);
 
@@ -180,16 +185,38 @@ class ApplicationAccessService
     public function getApplicationAccessSummary(string $applicationId): array
     {
         try {
+            // Get ALL policy bindings and filter manually for more reliable results
             $bindingsResult = $this->authentik->request('GET', '/policies/bindings/', [
-                'target' => $applicationId,
-                'page_size' => 100
+                'page_size' => 200
             ]);
             
             $allBindings = $bindingsResult['results'] ?? [];
             
-            $accessBindings = array_filter($allBindings, function($binding) {
+            Log::info('Filtering policy bindings for application access summary', [
+                'application_id' => $applicationId,
+                'total_bindings_fetched' => count($allBindings),
+                'sample_targets' => array_map(function($b) { 
+                    return ['target' => $b['target'] ?? 'null', 'pk' => $b['pk'] ?? 'null']; 
+                }, array_slice($allBindings, 0, 5))
+            ]);
+            
+            // Filter bindings that target this specific application
+            $applicationBindings = array_filter($allBindings, function($binding) use ($applicationId) {
+                return isset($binding['target']) && $binding['target'] === $applicationId;
+            });
+            
+            // Further filter to only access control bindings (group or user bindings without policies)
+            $accessBindings = array_filter($applicationBindings, function($binding) {
                 return ($binding['group'] || $binding['user']) && !$binding['policy'] && $binding['enabled'];
             });
+
+            Log::info('Application access summary calculation', [
+                'application_id' => $applicationId,
+                'application_bindings_count' => count($applicationBindings),
+                'access_bindings_count' => count($accessBindings),
+                'group_bindings' => count(array_filter($accessBindings, fn($b) => $b['group'])),
+                'user_bindings' => count(array_filter($accessBindings, fn($b) => $b['user']))
+            ]);
 
             return [
                 'has_restrictions' => !empty($accessBindings),
