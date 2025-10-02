@@ -353,11 +353,49 @@ server {
 
 ### Scheduled Tasks
 
+The portal includes automated Authentik synchronization via Laravel's scheduler:
+
+#### Configured Schedule
+
+- **Authentik Full Sync**: `php artisan authentik:sync --all` - Runs hourly
+  - Syncs all users, groups, applications, and related data
+  - Prevents overlapping executions  
+  - Runs in background
+  - Logs to `storage/logs/authentik-sync.log`
+
+#### Setup Cron Job
+
 Add to crontab for scheduled operations:
 
 ```bash
 * * * * * cd /path/to/portal && php artisan schedule:run >> /dev/null 2>&1
 ```
+
+#### Manual Sync Commands
+
+```bash
+# Test Authentik connection
+php artisan authentik:test
+
+# Sync all data from Authentik
+php artisan authentik:sync --all
+
+# Sync only users
+php artisan authentik:sync --users
+
+# Sync only groups  
+php artisan authentik:sync --groups
+
+# View scheduled commands
+php artisan schedule:list
+
+# Run scheduler manually (for testing)
+php artisan schedule:run
+```
+
+#### Sync Logs
+
+All sync operations are logged to `storage/logs/authentik-sync.log` for monitoring and troubleshooting.
 
 ## 🤝 Contributing
 
