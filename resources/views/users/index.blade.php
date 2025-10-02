@@ -204,6 +204,10 @@
                                                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-md transition-colors duration-200 inline-block">
                                                    View
                                                 </a>
+                                                <a href="{{ route('users.edit', $user['id']) }}" 
+                                                   class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-1 px-3 rounded-md transition-colors duration-200 inline-block">
+                                                   Edit
+                                                </a>
                                                 <button class="bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded-md transition-colors duration-200 delete-user-btn"
                                                         data-user-id="{{ $user['id'] }}"
                                                         data-username="{{ $user['username'] }}">

@@ -15,9 +15,21 @@ class UserController extends Controller
 {
     protected ?AuthentikSDK $authentik;
 
-    public function __construct(?AuthentikSDK $authentik = null)
+    public function __construct()
     {
-        $this->authentik = $authentik;
+        try {
+            $apiToken = config('services.authentik.api_token');
+            if ($apiToken) {
+                $this->authentik = new AuthentikSDK($apiToken);
+            } else {
+                $this->authentik = null;
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to initialize Authentik SDK in UserController', [
+                'error' => $e->getMessage()
+            ]);
+            $this->authentik = null;
+        }
     }
 
     /**
@@ -198,6 +210,146 @@ class UserController extends Controller
                 'error' => $e->getMessage()
             ]);
             return redirect()->route('users.index')->with('error', 'User not found: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show the form for editing a user
+     */
+    public function edit($id)
+    {
+        if (!$this->authentik) {
+            return redirect()->route('users.index')->with('error', 'Authentik SDK is not available.');
+        }
+
+        try {
+            $authentikUser = $this->authentik->users()->get($id);
+            $localUser = User::where('authentik_id', $id)->first();
+            
+            // Get all available groups for assignment
+            $allGroups = [];
+            $userGroups = [];
+            try {
+                $allGroups = $this->authentik->groups()->all();
+                $userGroups = $this->authentik->users()->getGroups($id);
+            } catch (\Exception $e) {
+                Log::warning('Failed to get groups data for user edit', [
+                    'user_id' => $id, 
+                    'error' => $e->getMessage()
+                ]);
+            }
+            
+            return view('users.edit', compact('authentikUser', 'localUser', 'allGroups', 'userGroups'));
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to get user for editing', [
+                'user_id' => $id, 
+                'error' => $e->getMessage()
+            ]);
+            return redirect()->route('users.index')->with('error', 'User not found: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update a user
+     */
+    public function update(Request $request, $id)
+    {
+        if (!$this->authentik) {
+            return redirect()->route('users.index')->with('error', 'Authentik SDK is not available.');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'username' => 'required|string|max:255',
+            'is_active' => 'boolean',
+            'groups' => 'array',
+            'groups.*' => 'string'
+        ]);
+
+        try {
+            // Prepare user data for update
+            $userData = [
+                'name' => $request->name,
+                'email' => $request->email,
+                'username' => $request->username,
+                'is_active' => $request->has('is_active') && $request->is_active
+            ];
+
+            // Update user in Authentik
+            $updatedUser = $this->authentik->users()->update($id, $userData);
+            
+            // Update local user if exists
+            $localUser = User::where('authentik_id', $id)->first();
+            if ($localUser) {
+                $localUser->update([
+                    'name' => $request->name,
+                    'email' => $request->email
+                ]);
+            }
+
+            // Handle group assignments
+            if ($request->has('groups')) {
+                try {
+                    // Get current user groups
+                    $currentGroups = $this->authentik->users()->getGroups($id);
+                    $currentGroupIds = collect($currentGroups)->pluck('pk')->toArray();
+                    
+                    $newGroupIds = $request->groups ?? [];
+                    
+                    // Remove user from groups they're no longer assigned to
+                    $groupsToRemove = array_diff($currentGroupIds, $newGroupIds);
+                    foreach ($groupsToRemove as $groupId) {
+                        try {
+                            $this->authentik->groups()->removeUser($groupId, $id);
+                        } catch (\Exception $e) {
+                            Log::warning('Failed to remove user from group', [
+                                'user_id' => $id,
+                                'group_id' => $groupId,
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    }
+                    
+                    // Add user to new groups
+                    $groupsToAdd = array_diff($newGroupIds, $currentGroupIds);
+                    foreach ($groupsToAdd as $groupId) {
+                        try {
+                            $this->authentik->groups()->addUser($groupId, $id);
+                        } catch (\Exception $e) {
+                            Log::warning('Failed to add user to group', [
+                                'user_id' => $id,
+                                'group_id' => $groupId,
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Failed to update user group assignments', [
+                        'user_id' => $id,
+                        'error' => $e->getMessage()
+                    ]);
+                    return redirect()->route('users.edit', $id)
+                        ->with('error', 'User updated, but failed to update group assignments: ' . $e->getMessage());
+                }
+            }
+
+            Log::info('User updated successfully', [
+                'user_id' => $id,
+                'updated_by' => Auth::id(),
+                'changes' => $userData
+            ]);
+
+            return redirect()->route('users.show', $id)->with('success', 'User updated successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Failed to update user', [
+                'user_id' => $id,
+                'error' => $e->getMessage(),
+                'data' => $request->all()
+            ]);
+            return redirect()->route('users.edit', $id)->with('error', 'Failed to update user: ' . $e->getMessage());
         }
     }
 

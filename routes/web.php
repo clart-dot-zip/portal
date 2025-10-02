@@ -45,6 +45,8 @@ Route::middleware(['auth', 'portal.admin:true'])->group(function () {
         Route::get('/onboard', [UserController::class, 'onboard'])->name('onboard');
         Route::post('/onboard', [UserController::class, 'processOnboard'])->name('onboard.process');
         Route::get('/{id}', [UserController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [UserController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [UserController::class, 'update'])->name('update');
         Route::delete('/{id}', [UserController::class, 'destroy'])->name('destroy');
         Route::post('/sync', [UserController::class, 'sync'])->name('sync');
         Route::post('/{id}/toggle-admin', [UserController::class, 'togglePortalAdmin'])->name('toggle-admin');
