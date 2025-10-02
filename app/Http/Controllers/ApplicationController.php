@@ -4,15 +4,18 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\Authentik\AuthentikSDK;
+use App\Services\ApplicationAccessService;
 use Illuminate\Support\Facades\Log;
 
 class ApplicationController extends Controller
 {
     protected $authentik;
+    protected $accessService;
 
     public function __construct()
     {
         $this->authentik = app(AuthentikSDK::class);
+        $this->accessService = app(ApplicationAccessService::class);
     }
 
     /**
@@ -367,7 +370,10 @@ class ApplicationController extends Controller
                 ]);
             }
 
-            return view('applications.edit', compact('application', 'users', 'groups', 'currentAccess', 'policyBindings'));
+            // Get access summary
+            $accessSummary = $this->accessService->getApplicationAccessSummary($id);
+
+            return view('applications.edit', compact('application', 'users', 'groups', 'currentAccess', 'policyBindings', 'accessSummary'));
 
         } catch (\Exception $e) {
             Log::error('Failed to get application for editing', [

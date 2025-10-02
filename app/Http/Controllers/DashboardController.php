@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\Authentik\AuthentikSDK;
+use App\Services\ApplicationAccessService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -11,6 +12,7 @@ use Carbon\Carbon;
 class DashboardController extends Controller
 {
     protected $authentik;
+    protected $accessService;
 
     public function __construct()
     {
@@ -18,12 +20,14 @@ class DashboardController extends Controller
             $apiToken = config('services.authentik.api_token');
             if ($apiToken) {
                 $this->authentik = new AuthentikSDK($apiToken);
+                $this->accessService = app(ApplicationAccessService::class);
             }
         } catch (\Exception $e) {
-            Log::error('Failed to initialize Authentik SDK in DashboardController', [
+            Log::error('Failed to initialize services in DashboardController', [
                 'error' => $e->getMessage()
             ]);
             $this->authentik = null;
+            $this->accessService = null;
         }
     }
 
@@ -62,8 +66,23 @@ class DashboardController extends Controller
             }
         }
 
-        // Personal applications (placeholder for future implementation)
+        // Get user's accessible applications
         $personalApps = [];
+        if ($this->accessService && $user && $user->authentik_id) {
+            try {
+                $personalApps = $this->accessService->getUserAccessibleApplications($user->authentik_id);
+                Log::info('Retrieved accessible applications for user dashboard', [
+                    'user_id' => $user->id,
+                    'authentik_id' => $user->authentik_id,
+                    'applications_count' => count($personalApps)
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Failed to fetch accessible applications for user dashboard', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
 
         return view('dashboard.user', compact('userStats', 'personalApps', 'isPortalAdmin'));
     }

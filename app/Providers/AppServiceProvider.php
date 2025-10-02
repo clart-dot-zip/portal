@@ -18,6 +18,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(AuthentikSDK::class, function ($app) {
             return new AuthentikSDK(config('services.authentik.api_token'));
         });
+
+        $this->app->singleton(\App\Services\ApplicationAccessService::class, function ($app) {
+            return new \App\Services\ApplicationAccessService($app->make(AuthentikSDK::class));
+        });
     }
 
     /**
