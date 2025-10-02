@@ -203,7 +203,7 @@
                             </ul>
                         </li>
                         <li><strong>Create a strong password</strong> (minimum 8 characters recommended)</li>
-                        <li><strong>Complete the setup</strong> and you'll be ready to explore!</li>
+                        <li><strong>Complete the setup</strong></li>
                     </ol>
                 </div>
             @elseif($password)
