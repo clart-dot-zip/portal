@@ -141,11 +141,6 @@
             <div class="security-note">
                 <p><strong>Security Notice:</strong> This password reset link will expire in 24 hours for your security. If you didn't request this password reset, please ignore this email or contact your administrator if you have concerns.</p>
             </div>
-            
-            <p>If you continue to have problems, please contact your system administrator.</p>
-            
-            <p>Best regards,<br>
-            The {{ config('app.name') }} Team</p>
         </div>
         
         <div class="footer">

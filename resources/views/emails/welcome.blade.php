@@ -233,11 +233,6 @@
                     <a href="{{ $loginUrl }}" class="action-button">Visit {{ config('app.name') }}</a>
                 </div>
             @endif
-            
-            <p>If you have any questions or need assistance, please don't hesitate to contact your system administrator.</p>
-            
-            <p>Best regards,<br>
-            The {{ config('app.name') }} Team</p>
         </div>
         
         <div class="footer">
