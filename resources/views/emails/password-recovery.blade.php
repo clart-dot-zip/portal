@@ -22,8 +22,8 @@
             overflow: hidden;
         }
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #3b82f6;
+            color: #ffffff;
             padding: 30px 20px;
             text-align: center;
         }
@@ -31,6 +31,7 @@
             margin: 0;
             font-size: 28px;
             font-weight: 300;
+            color: #ffffff;
         }
         .content {
             padding: 40px 30px;
@@ -47,8 +48,8 @@
         }
         .recovery-button {
             display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #3b82f6;
+            color: #ffffff;
             padding: 15px 30px;
             text-decoration: none;
             border-radius: 8px;
@@ -59,11 +60,12 @@
             transition: transform 0.2s;
         }
         .recovery-button:hover {
+            background: #2563eb;
             transform: translateY(-2px);
         }
         .alternative-link {
             background-color: #f7fafc;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #3b82f6;
             padding: 15px;
             margin: 20px 0;
             border-radius: 0 8px 8px 0;
@@ -74,7 +76,7 @@
             color: #4a5568;
         }
         .alternative-link a {
-            color: #667eea;
+            color: #3b82f6;
             word-break: break-all;
         }
         .footer {
