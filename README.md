@@ -397,32 +397,6 @@ php artisan schedule:run
 
 All sync operations are logged to `storage/logs/authentik-sync.log` for monitoring and troubleshooting.
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
-
-### Development Guidelines
-
-- Follow PSR-12 coding standards
-- Write tests for new features
-- Update documentation for changes
-- Use meaningful commit messages
-- Ensure backwards compatibility
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- **Documentation**: [Wiki](https://github.com/clart-dot-zip/portal/wiki)
-- **Issues**: [GitHub Issues](https://github.com/clart-dot-zip/portal/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/clart-dot-zip/portal/discussions)
-
 ## 🏗️ Architecture
 
 ### Technology Stack
