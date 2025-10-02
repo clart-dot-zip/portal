@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Authentik\AuthentikSDK;
 
 class AuthController extends Controller
 {
@@ -19,39 +20,50 @@ class AuthController extends Controller
     {
         try {
             $authentikUser = Socialite::driver('authentik')->user();
-
-            // First, try to find user by authentik_id (most reliable)
-            $user = User::where('authentik_id', $authentikUser->getId())->first();
+            
+            // Get the correct numeric ID from Authentik API using the email
+            $authentikSDK = new AuthentikSDK();
+            $apiUser = $authentikSDK->users()->getByEmail($authentikUser->getEmail());
+            
+            $correctAuthentikId = null;
+            if (!empty($apiUser) && isset($apiUser['pk'])) {
+                $correctAuthentikId = (string) $apiUser['pk'];
+            }
+            
+            // Check if user exists by correct authentik_id first
+            $user = null;
+            if ($correctAuthentikId) {
+                $user = User::where('authentik_id', $correctAuthentikId)->first();
+            }
             
             if (!$user) {
-                // If not found by authentik_id, try by email
+                // If not found by authentik_id, check by email
                 $user = User::where('email', $authentikUser->getEmail())->first();
                 
                 if ($user) {
-                    // User exists with same email but different authentik_id
-                    // This could be a legitimate ID change in Authentik
-                    // Log this for monitoring
-                    Log::warning('User authentik_id changed during login', [
+                    // Log warning if authentik_id is changing
+                    Log::warning('User authentik_id being corrected during login', [
                         'user_id' => $user->id,
                         'email' => $user->email,
                         'old_authentik_id' => $user->authentik_id,
-                        'new_authentik_id' => $authentikUser->getId()
+                        'socialite_id' => $authentikUser->getId(),
+                        'correct_authentik_id' => $correctAuthentikId
                     ]);
                     
-                    // Update the authentik_id only if it's clearly different
-                    if ($user->authentik_id != $authentikUser->getId()) {
+                    // Update to use the correct numeric ID
+                    if ($correctAuthentikId && $user->authentik_id != $correctAuthentikId) {
                         $user->update([
-                            'authentik_id' => $authentikUser->getId(),
+                            'authentik_id' => $correctAuthentikId,
                             'name' => $authentikUser->getName(),
                             'avatar' => $authentikUser->getAvatar(),
                         ]);
                     }
                 } else {
-                    // Create new user
+                    // Create new user with correct numeric ID
                     $user = User::create([
                         'email' => $authentikUser->getEmail(),
                         'name' => $authentikUser->getName(),
-                        'authentik_id' => $authentikUser->getId(),
+                        'authentik_id' => $correctAuthentikId ?: $authentikUser->getId(),
                         'avatar' => $authentikUser->getAvatar(),
                     ]);
                 }
@@ -78,6 +90,10 @@ class AuthController extends Controller
     public function logout()
     {
         Auth::logout();
-        return redirect('/');
+        
+        // Log out from Authentik as well
+        $authentikLogoutUrl = config('services.authentik.base_url') . '/if/session-end/' . config('services.authentik.client_id') . '/';
+        
+        return redirect($authentikLogoutUrl);
     }
 }
