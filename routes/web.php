@@ -84,6 +84,7 @@ Route::middleware(['auth', 'portal.admin:true'])->group(function () {
         Route::post('/sync', [ApplicationController::class, 'sync'])->name('sync');
         Route::post('/{id}/groups', [ApplicationController::class, 'assignGroupAccess'])->name('assign-group');
         Route::delete('/{id}/groups/{groupId}', [ApplicationController::class, 'removeGroupAccess'])->name('remove-group');
+        Route::post('/{id}/users', [ApplicationController::class, 'addUserAccess'])->name('add-user');
         Route::delete('/{id}/access', [ApplicationController::class, 'removeAccess'])->name('remove-access');
     });
 });

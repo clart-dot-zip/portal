@@ -96,10 +96,48 @@
                 </div>
             </div>
 
-            <!-- Assign User Access -->
+            <!-- User Access Information -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <h3 class="text-lg font-medium text-gray-900 mb-6">User Access Information</h3>
+                    
+                    @php
+                        $directUsers = array_filter($currentAccess ?? [], fn($access) => $access['type'] === 'user');
+                    @endphp
+                    
+                    @if(count($directUsers) > 0)
+                        <!-- Show current direct user assignments -->
+                        <div class="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-green-800">
+                                        Direct User Assignments Found
+                                    </h3>
+                                    <div class="mt-2 text-sm text-green-700">
+                                        <p>The following users are directly assigned to this application:</p>
+                                        <ul class="list-disc list-inside mt-2 space-y-1">
+                                            @foreach($directUsers as $user)
+                                                <li>
+                                                    <strong>{{ $user['user_name'] }}</strong>
+                                                    @if($user['enabled'] === false)
+                                                        <span class="text-red-600">(Disabled)</span>
+                                                    @endif
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                        <p class="mt-2">
+                                            <em>You can add or remove user assignments below.</em>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                     
                     <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
                         <div class="flex">
@@ -110,20 +148,55 @@
                             </div>
                             <div class="ml-3">
                                 <h3 class="text-sm font-medium text-blue-800">
-                                    Direct User Assignment Not Supported
+                                    Recommended Access Management
                                 </h3>
                                 <div class="mt-2 text-sm text-blue-700">
                                     <p>
-                                        Authentik doesn't support direct user-to-application assignment. 
-                                        Users receive access through group membership. To grant access to a user:
+                                        While direct user assignments are possible, group-based access is recommended. 
+                                        To grant access to additional users:
                                     </p>
                                     <ol class="list-decimal list-inside mt-2 space-y-1">
                                         <li>Assign a group to this application using the "Assign Group Access" section above</li>
-                                        <li>Add the user to that group in the Groups management section</li>
+                                        <li>Add users to that group in the Groups management section</li>
+                                        <li>Or use the direct user assignment form below</li>
                                     </ol>
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Add User Access Form -->
+                    <div class="mt-6">
+                        <h4 class="text-md font-medium text-gray-900 mb-4">Assign User Access</h4>
+                        <form id="add-user-form" class="flex gap-4 items-end">
+                            <div class="flex-1">
+                                <label for="user_select" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Select User
+                                </label>
+                                <select id="user_select" name="user_id" 
+                                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <option value="">Choose a user...</option>
+                                    @foreach($users as $user)
+                                        @php
+                                            $isAlreadyAssigned = collect($currentAccess ?? [])->contains(function($access) use ($user) {
+                                                return $access['type'] === 'user' && $access['user_id'] == $user['pk'];
+                                            });
+                                        @endphp
+                                        @if(!$isAlreadyAssigned)
+                                            <option value="{{ $user['pk'] }}">
+                                                {{ $user['name'] ?: $user['username'] }} ({{ $user['username'] }})
+                                            </option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <button type="submit" 
+                                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                                    Assign User
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -405,7 +478,12 @@
             .then(data => {
                 if (data.success) {
                     showMessage('Access policy removed successfully', 'success');
+                    // Refresh the policies table
                     loadAccessPolicies();
+                    // Refresh the page to update the user dropdown
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
                 } else {
                     showMessage(data.message || 'Failed to remove access policy', 'error');
                 }
@@ -440,5 +518,63 @@
                 messageDiv.remove();
             }, 5000);
         }
+
+        // Handle user assignment form
+        document.getElementById('add-user-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const userId = formData.get('user_id');
+            
+            if (!userId) {
+                showMessage('Please select a user to assign.', 'error');
+                return;
+            }
+            
+            // Disable submit button during request
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Assigning...';
+            
+            fetch(`/applications/{{ $application['pk'] }}/users`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    user_id: parseInt(userId)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    // Refresh the policies table to show the new assignment
+                    loadAccessPolicies();
+                    // Reset the form
+                    this.reset();
+                    // Remove the assigned user from the dropdown
+                    const selectElement = document.getElementById('user_select');
+                    const selectedOption = selectElement.querySelector(`option[value="${userId}"]`);
+                    if (selectedOption) {
+                        selectedOption.remove();
+                    }
+                } else {
+                    showMessage(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error assigning user:', error);
+                showMessage('An error occurred while assigning the user.', 'error');
+            })
+            .finally(() => {
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            });
+        });
+
     </script>
 </x-app-layout>

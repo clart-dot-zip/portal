@@ -559,6 +559,56 @@ class ApplicationController extends Controller
     }
 
     /**
+     * Add user access to application
+     */
+    public function addUserAccess(Request $request, $id)
+    {
+        if (!$this->authentik) {
+            return response()->json(['success' => false, 'message' => 'Authentik SDK is not available.'], 500);
+        }
+
+        $request->validate([
+            'user_id' => 'required|integer'
+        ]);
+
+        try {
+            // Create a policy binding for the user
+            $bindingData = [
+                'target' => $id,
+                'user' => $request->user_id,
+                'enabled' => true,
+                'order' => 0
+            ];
+
+            $binding = $this->authentik->request('POST', '/policies/bindings/', $bindingData);
+
+            Log::info('User access added to application', [
+                'application_id' => $id,
+                'user_id' => $request->user_id,
+                'binding_id' => $binding['pk'] ?? null
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User access added successfully',
+                'binding' => $binding
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to add user access to application', [
+                'application_id' => $id,
+                'user_id' => $request->user_id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to add user access: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Remove access from application
      */
     public function removeAccess(Request $request, $id)
