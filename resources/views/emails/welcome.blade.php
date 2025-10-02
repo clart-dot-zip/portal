@@ -195,7 +195,7 @@
                 <div class="instructions-box">
                     <h3>📋 Setup Instructions</h3>
                     <ol>
-                        <li><strong>Click the "🚀 Set Up Your Password" button above</strong></li>
+                        <li><strong>Click the "Set Up Your Password" button above</strong></li>
                         <li><strong>When prompted, enter your credentials:</strong>
                             <ul style="margin: 5px 0; padding-left: 20px;">
                                 <li>Email: <span class="credential-value">{{ $user['email'] }}</span></li>
@@ -208,7 +208,7 @@
                 </div>
             @elseif($password)
                 <div class="credentials-box">
-                    <h3>🔑 Your Login Credentials</h3>
+                    <h3>Your Login Credentials</h3>
                     <p><strong>Username:</strong> <span class="credential-value">{{ $user['username'] }}</span></p>
                     <p><strong>Temporary Password:</strong> <span class="credential-value">{{ $password }}</span></p>
                     <p><strong>Email:</strong> <span class="credential-value">{{ $user['email'] }}</span></p>
@@ -223,7 +223,7 @@
                 </div>
             @else
                 <div class="credentials-box">
-                    <h3>� Your Account</h3>
+                    <h3>Your Account</h3>
                     <p><strong>Username:</strong> <span class="credential-value">{{ $user['username'] }}</span></p>
                     <p><strong>Email:</strong> <span class="credential-value">{{ $user['email'] }}</span></p>
                     <p>Please contact your administrator for password setup instructions.</p>
