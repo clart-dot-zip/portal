@@ -9,7 +9,6 @@
             <div class="mb-8">
                 <img src="{{ asset('images/clart.png') }}" alt="Portal Logo" class="w-20 h-20 mx-auto mb-4 rounded-full shadow-lg">
                 <h1 class="text-3xl font-bold text-white mb-2">Welcome to Portal</h1>
-                <p class="text-white/80">Your gateway to Clart services</p>
             </div>
 
             @if (session('status'))
