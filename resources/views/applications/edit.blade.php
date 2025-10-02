@@ -81,9 +81,6 @@
                     </div>
                 </div>
             </div>
-                    <span class="block sm:inline">{{ session('error') }}</span>
-                </div>
-            @endif
 
             <!-- Application Info Bar -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
