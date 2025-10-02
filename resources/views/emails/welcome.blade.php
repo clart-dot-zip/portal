@@ -193,7 +193,7 @@
                 </div>
                 
                 <div class="instructions-box">
-                    <h3>📋 Setup Instructions</h3>
+                    <h3>Setup Instructions</h3>
                     <ol>
                         <li><strong>Click the "Set Up Your Password" button above</strong></li>
                         <li><strong>When prompted, enter your credentials:</strong>
