@@ -12,33 +12,7 @@ class ApplicationController extends Controller
 
     public function __construct()
     {
-              try {
-                // Try to get all policy bindings and filter by target
-                $bindingsResult = $this->authentik->request('GET', '/policies/bindings/', [
-                    'page_size' => 100
-                ]);
-                $allBindings = $bindingsResult['results'] ?? [];
-                
-                // Filter bindings for this specific application
-                $policyBindings = array_filter($allBindings, function($binding) use ($id) {
-                    return isset($binding['target']) && $binding['target'] === $id;
-                });
-                
-                Log::info('Policy bindings filtering for application edit', [
-                    'application_id' => $id,
-                    'total_bindings_from_api' => count($allBindings),
-                    'filtered_bindings_for_app' => count($policyBindings),
-                    'sample_filtered_bindings' => array_slice($policyBindings, 0, 3)
-                ]);            $apiToken = config('services.authentik.api_token');
-            if ($apiToken) {
-                $this->authentik = new AuthentikSDK($apiToken);
-            }
-        } catch (\Exception $e) {
-            Log::error('Failed to initialize Authentik SDK in ApplicationController', [
-                'error' => $e->getMessage()
-            ]);
-            $this->authentik = null;
-        }
+        $this->authentik = app(AuthentikSDK::class);
     }
 
     /**
