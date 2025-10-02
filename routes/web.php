@@ -9,10 +9,16 @@ use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\DashboardController;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'portal.admin:false'])->name('dashboard');
 
-Route::get('/', [DashboardController::class, 'index'])->middleware(['auth', 'portal.admin:false'])->name('dashboard');
+Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+    return view('welcome');
+})->name('welcome');
 
 // Admin Dashboard Route
 Route::get('/admin/dashboard', [DashboardController::class, 'adminDashboard'])->middleware(['auth', 'portal.admin:true'])->name('admin.dashboard');

@@ -91,9 +91,11 @@ class AuthController extends Controller
     {
         Auth::logout();
         
-        // Log out from Authentik as well
-        $authentikLogoutUrl = config('services.authentik.base_url') . '/if/session-end/' . config('services.authentik.client_id') . '/';
+        // Clear the session completely
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
         
-        return redirect($authentikLogoutUrl);
+        // Redirect to welcome page with a message
+        return redirect()->route('welcome')->with('status', 'You have been logged out of Portal successfully.');
     }
 }
