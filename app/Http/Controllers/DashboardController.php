@@ -7,6 +7,7 @@ use App\Services\Authentik\AuthentikSDK;
 use App\Services\ApplicationAccessService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -32,59 +33,131 @@ class DashboardController extends Controller
     }
 
     /**
-     * Display the user dashboard
+     * Display the user dashboard (optimized with caching)
      */
     public function index(Request $request)
     {
         $isPortalAdmin = $request->attributes->get('isPortalAdmin', false);
+        $user = Auth::user();
         
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // Cache key for this user's dashboard data
+        $dashboardCacheKey = "user_dashboard_{$user->id}";
+        
+        // Try to get cached dashboard data (cache for 5 minutes)
+        $cachedData = Cache::get($dashboardCacheKey);
+        if ($cachedData !== null) {
+            Log::info('Retrieved dashboard data from cache', [
+                'user_id' => $user->id,
+                'cache_key' => $dashboardCacheKey
+            ]);
+            
+            return view('dashboard.user', array_merge($cachedData, ['isPortalAdmin' => $isPortalAdmin]));
+        }
+
         // Basic stats available to all users
         $userStats = [
             'profile_complete' => true,
             'groups_count' => 0,
-            'last_login' => null,
-            'account_created' => null
+            'last_login' => $user->last_login,
+            'account_created' => $user->created_at,
+            'groups' => []
         ];
 
-        $user = Auth::user();
-        if ($user) {
-            $userStats['last_login'] = $user->last_login;
-            $userStats['account_created'] = $user->created_at;
-            
-            // Get user's groups if Authentik is available
-            if ($this->authentik && $user->authentik_id) {
-                try {
-                    $userGroups = $this->authentik->users()->getGroups($user->authentik_id);
-                    $userStats['groups_count'] = count($userGroups);
-                    $userStats['groups'] = $userGroups;
-                } catch (\Exception $e) {
-                    Log::warning('Failed to fetch user groups for dashboard', [
-                        'user_id' => $user->id,
-                        'error' => $e->getMessage()
-                    ]);
-                }
-            }
+        // Get user's groups if Authentik is available (with caching)
+        if ($this->authentik && $user->authentik_id) {
+            $userStats['groups'] = $this->getUserGroupsCached($user->authentik_id);
+            $userStats['groups_count'] = count($userStats['groups']);
         }
 
-        // Get user's accessible applications
+        // Get user's accessible applications (with caching)
         $personalApps = [];
-        if ($this->accessService && $user && $user->authentik_id) {
+        if ($this->accessService && $user->authentik_id) {
+            $personalApps = $this->getUserApplicationsCached($user->authentik_id);
+        }
+
+        // Prepare data for caching
+        $dashboardData = [
+            'userStats' => $userStats,
+            'personalApps' => $personalApps
+        ];
+
+        // Cache the results for 5 minutes
+        Cache::put($dashboardCacheKey, $dashboardData, 300);
+
+        Log::info('Generated and cached dashboard data', [
+            'user_id' => $user->id,
+            'applications_count' => count($personalApps),
+            'groups_count' => $userStats['groups_count']
+        ]);
+
+        return view('dashboard.user', array_merge($dashboardData, ['isPortalAdmin' => $isPortalAdmin]));
+    }
+
+    /**
+     * Get user groups with caching
+     */
+    private function getUserGroupsCached($userId): array
+    {
+        $cacheKey = "user_groups_{$userId}";
+        
+        return Cache::remember($cacheKey, 600, function () use ($userId) { // Cache for 10 minutes
             try {
-                $personalApps = $this->accessService->getUserAccessibleApplications($user->authentik_id);
-                Log::info('Retrieved accessible applications for user dashboard', [
-                    'user_id' => $user->id,
-                    'authentik_id' => $user->authentik_id,
-                    'applications_count' => count($personalApps)
+                if (!$this->authentik) {
+                    return [];
+                }
+                
+                $userGroups = $this->authentik->users()->getGroups($userId);
+                
+                Log::info('Fetched user groups from API', [
+                    'user_id' => $userId,
+                    'groups_count' => count($userGroups)
                 ]);
+                
+                return $userGroups;
             } catch (\Exception $e) {
-                Log::warning('Failed to fetch accessible applications for user dashboard', [
-                    'user_id' => $user->id,
+                Log::warning('Failed to fetch user groups for dashboard', [
+                    'user_id' => $userId,
                     'error' => $e->getMessage()
                 ]);
+                return [];
             }
-        }
+        });
+    }
 
-        return view('dashboard.user', compact('userStats', 'personalApps', 'isPortalAdmin'));
+    /**
+     * Get user applications with caching and optimization
+     */
+    private function getUserApplicationsCached($userId): array
+    {
+        $cacheKey = "user_apps_{$userId}";
+        
+        return Cache::remember($cacheKey, 300, function () use ($userId) { // Cache for 5 minutes
+            try {
+                if (!$this->accessService) {
+                    return [];
+                }
+                
+                // Use optimized access service method
+                $personalApps = $this->accessService->getUserAccessibleApplications($userId);
+                
+                Log::info('Fetched user applications from API', [
+                    'user_id' => $userId,
+                    'applications_count' => count($personalApps)
+                ]);
+                
+                return $personalApps;
+            } catch (\Exception $e) {
+                Log::warning('Failed to fetch accessible applications for user dashboard', [
+                    'user_id' => $userId,
+                    'error' => $e->getMessage()
+                ]);
+                return [];
+            }
+        });
     }
 
     /**

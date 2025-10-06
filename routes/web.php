@@ -87,6 +87,19 @@ Route::middleware(['auth', 'portal.admin:true'])->group(function () {
         Route::post('/{id}/users', [ApplicationController::class, 'addUserAccess'])->name('add-user');
         Route::delete('/{id}/access', [ApplicationController::class, 'removeAccess'])->name('remove-access');
     });
+
+    // Cache management routes
+    Route::prefix('cache')->name('cache.')->group(function () {
+        Route::post('/clear', function () {
+            \Illuminate\Support\Facades\Cache::flush();
+            return redirect()->back()->with('success', 'Cache cleared successfully');
+        })->name('clear');
+        
+        Route::post('/clear-user/{userId}', function ($userId) {
+            \App\Services\DashboardCacheService::clearUserCache($userId);
+            return redirect()->back()->with('success', 'User cache cleared successfully');
+        })->name('clear-user');
+    });
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
