@@ -5,24 +5,24 @@
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
+                    <a href="{{ route('dashboard') }}" onclick="showNavigationLoading(event)">
                         <img src="{{ asset('images/clart.png') }}" alt="Logo" class="block h-9 w-auto" />
                     </a>
                 </div>
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" onclick="showNavigationLoading(event)">
                         {{ __('Dashboard') }}
                     </x-nav-link>
                     @if(view()->shared('isPortalAdmin', false))
-                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')" onclick="showNavigationLoading(event)">
                             {{ __('Users') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('groups.index')" :active="request()->routeIs('groups.*')">
+                        <x-nav-link :href="route('groups.index')" :active="request()->routeIs('groups.*')" onclick="showNavigationLoading(event)">
                             {{ __('Groups') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('applications.index')" :active="request()->routeIs('applications.*')">
+                        <x-nav-link :href="route('applications.index')" :active="request()->routeIs('applications.*')" onclick="showNavigationLoading(event)">
                             {{ __('Applications') }}
                         </x-nav-link>
                     @endif
@@ -44,7 +44,7 @@
                             </button>
                         </x-slot>
                         <x-slot name="content">
-                            <x-dropdown-link :href="route('users.profile')">
+                            <x-dropdown-link :href="route('users.profile')" onclick="showNavigationLoading(event)">
                                 {{ __('Profile') }}
                             </x-dropdown-link>
                             <!-- Authentication -->
@@ -76,17 +76,17 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" onclick="showNavigationLoading(event)">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
             @if(view()->shared('isPortalAdmin', false))
-                <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')" onclick="showNavigationLoading(event)">
                     {{ __('Users') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('groups.index')" :active="request()->routeIs('groups.*')">
+                <x-responsive-nav-link :href="route('groups.index')" :active="request()->routeIs('groups.*')" onclick="showNavigationLoading(event)">
                     {{ __('Groups') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('applications.index')" :active="request()->routeIs('applications.*')">
+                <x-responsive-nav-link :href="route('applications.index')" :active="request()->routeIs('applications.*')" onclick="showNavigationLoading(event)">
                     {{ __('Applications') }}
                 </x-responsive-nav-link>
             @endif
@@ -100,7 +100,7 @@
                     <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
                 </div>
                 <div class="mt-3 space-y-1">
-                    <x-responsive-nav-link :href="route('users.profile')">
+                    <x-responsive-nav-link :href="route('users.profile')" onclick="showNavigationLoading(event)">
                         {{ __('Profile') }}
                     </x-responsive-nav-link>
                     <!-- Authentication -->
@@ -116,4 +116,32 @@
             @endauth
         </div>
     </div>
+
+    <!-- Navigation Loading Script -->
+    <script>
+        function showNavigationLoading(event) {
+            // Don't show loading for same-page navigation
+            const currentUrl = window.location.href;
+            const targetUrl = event.target.closest('a')?.href;
+            
+            if (targetUrl && targetUrl !== currentUrl && !targetUrl.includes('#')) {
+                // Show loading overlay
+                if (window.loadingManager && window.loadingManager.loadingOverlay) {
+                    window.loadingManager.loadingOverlay.style.display = 'flex';
+                    window.loadingManager.loadingOverlay.style.opacity = '1';
+                    
+                    // Update loading text for navigation
+                    const loadingText = window.loadingManager.loadingOverlay.querySelector('.text-lg');
+                    if (loadingText) {
+                        loadingText.textContent = 'Loading Page';
+                    }
+                    
+                    const loadingSubtext = window.loadingManager.loadingOverlay.querySelector('.text-sm');
+                    if (loadingSubtext) {
+                        loadingSubtext.textContent = 'Please wait...';
+                    }
+                }
+            }
+        }
+    </script>
 </nav>

@@ -13,6 +13,13 @@ use Illuminate\Support\Facades\Auth;
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'portal.admin:false'])->name('dashboard');
 
+// Test loading page (only in development)
+if (app()->environment('local')) {
+    Route::get('/test-loading', function () {
+        return view('test-loading');
+    })->middleware(['auth'])->name('test-loading');
+}
+
 Route::get('/', function () {
     if (Auth::check()) {
         return redirect()->route('dashboard');

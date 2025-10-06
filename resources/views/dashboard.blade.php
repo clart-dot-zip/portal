@@ -314,6 +314,11 @@
         let chartsInitialized = false; // Flag to prevent double initialization
         
         document.addEventListener('DOMContentLoaded', function() {
+            // Update loading progress for dashboard-specific content
+            if (window.loadingManager) {
+                window.loadingManager.updateProgress(60);
+            }
+            
             // Add a timeout to show fallback if Chart.js takes too long to load
             setTimeout(function() {
                 if (typeof Chart === 'undefined') {
@@ -325,11 +330,27 @@
                 if (!chartsInitialized) {
                     initializeCharts();
                 }
+                
+                // Mark charts as ready and complete loading
+                if (window.loadingManager) {
+                    window.loadingManager.updateProgress(90);
+                    setTimeout(() => {
+                        window.loadingManager.forceComplete();
+                    }, 500);
+                }
             }, 2000); // Wait 2 seconds for Chart.js to load
             
             // Also try to initialize immediately if Chart.js is already available
             if (typeof Chart !== 'undefined' && !chartsInitialized) {
                 initializeCharts();
+                
+                // Complete loading faster if charts are ready
+                if (window.loadingManager) {
+                    window.loadingManager.updateProgress(90);
+                    setTimeout(() => {
+                        window.loadingManager.forceComplete();
+                    }, 200);
+                }
             }
         });
         
@@ -345,6 +366,13 @@
             if (groupCanvas) {
                 groupCanvas.style.display = 'none';
                 document.getElementById('groupMembershipFallback').classList.remove('hidden');
+            }
+            
+            // Complete loading even with fallback content
+            if (window.loadingManager) {
+                setTimeout(() => {
+                    window.loadingManager.forceComplete();
+                }, 300);
             }
         }
         
@@ -483,12 +511,36 @@
             }
         }
 
-        // Sync function
+        // Sync function with enhanced loading
         function syncData() {
             // Show loading state
             const syncButton = event.currentTarget;
             const originalContent = syncButton.innerHTML;
-            syncButton.innerHTML = '<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-700 mx-auto"></div>';
+            
+            // Create better loading button
+            syncButton.innerHTML = `
+                <div class="flex items-center justify-center">
+                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-700 mr-2"></div>
+                    <span>Syncing...</span>
+                </div>
+            `;
+            syncButton.disabled = true;
+            syncButton.classList.add('opacity-75', 'cursor-not-allowed');
+            
+            // Show global loading overlay for sync
+            if (window.loadingManager) {
+                const overlay = document.createElement('div');
+                overlay.id = 'syncOverlay';
+                overlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center';
+                overlay.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 text-center">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                        <div class="text-lg font-semibold text-gray-700">Syncing Data</div>
+                        <div class="text-sm text-gray-500">This may take a moment...</div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+            }
             
             // Sync users and groups
             Promise.all([
@@ -511,20 +563,42 @@
             ])
             .then(responses => Promise.all(responses.map(r => r.json())))
             .then(results => {
+                // Remove sync overlay
+                const syncOverlay = document.getElementById('syncOverlay');
+                if (syncOverlay) {
+                    syncOverlay.remove();
+                }
+                
                 // Restore button content
                 syncButton.innerHTML = originalContent;
+                syncButton.disabled = false;
+                syncButton.classList.remove('opacity-75', 'cursor-not-allowed');
                 
                 // Show success message
                 showMessage('Data synced successfully!', 'success');
                 
-                // Refresh page after a moment
+                // Refresh page after a moment with loading
                 setTimeout(() => {
+                    // Show loading overlay before refresh
+                    if (window.loadingManager && window.loadingManager.loadingOverlay) {
+                        window.loadingManager.loadingOverlay.style.display = 'flex';
+                        window.loadingManager.loadingOverlay.style.opacity = '1';
+                    }
                     window.location.reload();
                 }, 1500);
             })
             .catch(error => {
+                // Remove sync overlay
+                const syncOverlay = document.getElementById('syncOverlay');
+                if (syncOverlay) {
+                    syncOverlay.remove();
+                }
+                
                 // Restore button content
                 syncButton.innerHTML = originalContent;
+                syncButton.disabled = false;
+                syncButton.classList.remove('opacity-75', 'cursor-not-allowed');
+                
                 showMessage('Sync failed: ' + error.message, 'error');
             });
         }
