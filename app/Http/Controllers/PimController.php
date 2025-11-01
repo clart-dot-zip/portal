@@ -9,6 +9,7 @@ use App\Services\Pim\PimService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class PimController extends Controller
 {
@@ -17,6 +18,79 @@ class PimController extends Controller
     public function __construct(PimService $pimService)
     {
         $this->pimService = $pimService;
+    }
+
+    public function index(Request $request): View
+    {
+        $status = strtolower((string) $request->get('status', ''));
+        $search = trim((string) $request->get('search', ''));
+
+        $validStatuses = ['active', 'pending', 'failed', 'revoked', 'expired'];
+        if (!in_array($status, $validStatuses, true)) {
+            $status = null;
+        }
+
+        $activationsQuery = PimActivation::with(['user', 'initiatedBy'])
+            ->latest('activated_at');
+
+        if ($status) {
+            if ($status === 'active') {
+                $activationsQuery->where('status', 'active')->whereNull('deactivated_at');
+            } elseif ($status === 'revoked') {
+                $activationsQuery->where('status', 'revoked');
+            } else {
+                $activationsQuery->where('status', $status);
+            }
+        }
+
+        if ($search !== '') {
+            $activationsQuery->where(function ($query) use ($search) {
+                $query
+                    ->where('reason', 'like', "%{$search}%")
+                    ->orWhere('role', 'like', "%{$search}%")
+                    ->orWhere('server_username_snapshot', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('username', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $activations = $activationsQuery->paginate(20)->withQueryString();
+
+        $baseQuery = PimActivation::query();
+        $summary = [
+            'total' => (clone $baseQuery)->count(),
+            'active' => (clone $baseQuery)->where('status', 'active')->whereNull('deactivated_at')->count(),
+            'pending' => (clone $baseQuery)->where('status', 'pending')->count(),
+            'failed' => (clone $baseQuery)->where('status', 'failed')->count(),
+            'revoked' => (clone $baseQuery)->where('status', 'revoked')->count(),
+            'expired' => (clone $baseQuery)->where('status', 'expired')->count(),
+        ];
+
+        $statusOptions = [
+            '' => 'All statuses',
+            'active' => 'Active',
+            'pending' => 'Pending',
+            'failed' => 'Failed',
+            'revoked' => 'Revoked',
+            'expired' => 'Expired',
+        ];
+
+        $roleCatalog = $this->pimService->roleCatalog()->keyBy('key');
+
+        return view('pim.index', [
+            'activations' => $activations,
+            'summary' => $summary,
+            'statusOptions' => $statusOptions,
+            'currentStatus' => $status,
+            'search' => $search,
+            'pimEnabled' => $this->pimService->isEnabled(),
+            'pimOperational' => $this->pimService->isOperational(),
+            'roleCatalog' => $roleCatalog,
+        ]);
     }
 
     public function activate(Request $request, string $authentikId): RedirectResponse

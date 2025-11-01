@@ -46,6 +46,11 @@ Route::middleware('auth')->group(function () {
 
 // Portal Admin Routes - Require admin access
 Route::middleware(['auth', 'portal.admin:true'])->group(function () {
+    // PIM Dashboard Routes - Admin access required
+    Route::prefix('pim')->name('pim.')->group(function () {
+        Route::get('/', [PimController::class, 'index'])->name('index');
+    });
+    
     
     // User Management Routes - Admin access required
     Route::prefix('users')->name('users.')->group(function () {

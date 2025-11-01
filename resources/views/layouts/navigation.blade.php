@@ -19,6 +19,9 @@
                         <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')" onclick="showNavigationLoading(event)">
                             {{ __('Users') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('pim.index')" :active="request()->routeIs('pim.*')" onclick="showNavigationLoading(event)">
+                            {{ __('PIM') }}
+                        </x-nav-link>
                         <x-nav-link :href="route('groups.index')" :active="request()->routeIs('groups.*')" onclick="showNavigationLoading(event)">
                             {{ __('Groups') }}
                         </x-nav-link>
@@ -82,6 +85,9 @@
             @if(view()->shared('isPortalAdmin', false))
                 <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')" onclick="showNavigationLoading(event)">
                     {{ __('Users') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('pim.index')" :active="request()->routeIs('pim.*')" onclick="showNavigationLoading(event)">
+                    {{ __('PIM') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('groups.index')" :active="request()->routeIs('groups.*')" onclick="showNavigationLoading(event)">
                     {{ __('Groups') }}

@@ -46,7 +46,7 @@ class PimService
      */
     public function rolesForUser(User $user): Collection
     {
-    return Collection::make($this->roles)
+        return Collection::make($this->roles)
             ->map(function (array $role, string $key) use ($user) {
                 $activeActivation = $this->getActiveActivation($user, $key);
 
@@ -62,6 +62,23 @@ class PimService
                     'active_activation' => $activeActivation,
                 ];
             });
+    }
+
+    public function roleCatalog(): Collection
+    {
+        return Collection::make($this->roles)
+            ->map(function (array $role, string $key) {
+                return array_merge([
+                    'key' => $key,
+                    'label' => $role['label'] ?? ucfirst($key),
+                    'description' => $role['description'] ?? null,
+                    'group' => $role['group'] ?? null,
+                    'max_duration_minutes' => (int) ($role['max_duration_minutes'] ?? 60),
+                    'default_duration_minutes' => (int) ($role['default_duration_minutes'] ?? 15),
+                    'minimum_duration_minutes' => (int) ($role['minimum_duration_minutes'] ?? 5),
+                ], $role);
+            })
+            ->values();
     }
 
     public function getRoleDefinition(string $roleKey): array
