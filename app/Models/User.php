@@ -6,6 +6,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\PimActivation;
 
 class User extends Authenticatable
 {
@@ -22,6 +24,7 @@ class User extends Authenticatable
         'email',
         'authentik_id',
         'username',
+        'server_username',
         'is_active',
         'last_login',
         'authentik_attributes',
@@ -40,4 +43,9 @@ class User extends Authenticatable
         'authentik_attributes' => 'array',
         'password' => 'hashed',
     ];
+
+    public function pimActivations(): HasMany
+    {
+        return $this->hasMany(PimActivation::class);
+    }
 }

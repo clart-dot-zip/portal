@@ -122,6 +122,17 @@ MAIL_USERNAME=your-smtp-username
 MAIL_PASSWORD=your-smtp-password
 MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS=noreply@your-domain.com
+
+# Privileged Identity Management (PIM)
+PIM_ENABLED=true
+PIM_SERVER_HOST=your.dedicated.server
+PIM_SERVER_USER=ssh_service_account
+PIM_SERVER_IDENTITY_FILE=/path/to/private/key
+PIM_ROOT_GROUP=root
+PIM_ROOT_MAX_DURATION=60
+PIM_ROOT_DEFAULT_DURATION=15
+PIM_USE_SUDO=true
+PIM_DRY_RUN=false
 ```
 
 ### 5. Database Setup
@@ -198,6 +209,27 @@ To configure access:
 1. Go to **Applications** → Select application → **Manage Access**
 2. Assign groups or users as needed
 3. Access status updates automatically
+
+### Privileged Identity Management (PIM)
+
+The PIM module enables just-in-time elevation to privileged roles (e.g., temporary `root` access) on your dedicated Linux server.
+
+Key capabilities:
+
+- **Server Username Mapping** – each portal user stores a corresponding Linux username.
+- **Role Catalogue** – administrators can activate predefined roles (currently `root`).
+- **Reason & Duration Capture** – activations require a justification and expiry window.
+- **Automated Revocation** – a scheduled task (`php artisan pim:enforce`) removes expired privileges.
+- **Audit History** – every activation/deactivation is recorded with initiator and timestamps.
+
+Configuration notes:
+
+1. Populate the PIM environment variables (see above) so the portal can reach your server over SSH.
+2. Ensure the SSH account can run `usermod`/`gpasswd` (either as root or via `sudo`).
+3. Schedule the enforcement command if you rely on systemd/cron (Laravel's scheduler already runs it every five minutes via `routes/console.php`).
+4. For non-production testing, set `PIM_DRY_RUN=true` to bypass real SSH execution while verifying UI flows.
+
+Once configured, administrators will see a new **PIM** tab on the user detail page where they can grant or revoke time-bound access.
 
 ## 📖 Usage
 

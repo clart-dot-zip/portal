@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PimController;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -58,6 +59,13 @@ Route::middleware(['auth', 'portal.admin:true'])->group(function () {
         Route::post('/sync', [UserController::class, 'sync'])->name('sync');
         Route::post('/{id}/toggle-admin', [UserController::class, 'togglePortalAdmin'])->name('toggle-admin');
         Route::post('/{id}/send-recovery', [UserController::class, 'sendPasswordRecovery'])->name('send-recovery');
+
+        Route::prefix('{id}/pim')->name('pim.')->group(function () {
+            Route::post('/activate', [PimController::class, 'activate'])->name('activate');
+            Route::post('/activations/{activation}/deactivate', [PimController::class, 'deactivate'])
+                ->whereNumber('activation')
+                ->name('deactivate');
+        });
     });
     
     // Group Management Routes - Admin access required

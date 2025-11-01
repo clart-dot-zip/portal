@@ -8,3 +8,9 @@ Schedule::command('authentik:sync --all')
     ->withoutOverlapping()
     ->runInBackground()
     ->appendOutputTo(storage_path('logs/authentik-sync.log'));
+
+Schedule::command('pim:enforce')
+    ->everyFiveMinutes()
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->appendOutputTo(storage_path('logs/pim-enforce.log'));

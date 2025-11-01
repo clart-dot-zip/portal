@@ -26,6 +26,7 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'server_username' => strtolower(fake()->unique()->userName()),
         ];
     }
 }

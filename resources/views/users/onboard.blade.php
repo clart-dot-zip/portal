@@ -60,6 +60,19 @@
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
+
+                            <div>
+                                <label for="server_username" class="block text-sm font-medium text-gray-700">Server Username *</label>
+                                <input type="text" name="server_username" id="server_username" required
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                       placeholder="linux account name"
+                                       pattern="[a-z_][a-z0-9_-]*"
+                                       maxlength="64">
+                                <p class="mt-1 text-xs text-gray-500">Name of the account on the dedicated Linux server.</p>
+                                @error('server_username')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

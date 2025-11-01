@@ -92,6 +92,22 @@
                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                        required>
                             </div>
+
+                            <div>
+                                <label for="server_username" class="block text-sm font-medium text-gray-700">Server Username</label>
+                                <input type="text"
+                                       name="server_username"
+                                       id="server_username"
+                                       value="{{ old('server_username', optional($localUser)->server_username) }}"
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                       placeholder="e.g., johndoe"
+                                       pattern="[a-z_][a-z0-9_-]*"
+                                       maxlength="64">
+                                <p class="mt-1 text-xs text-gray-500">Linux account name used for privileged access.</p>
+                                @error('server_username')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
                             
                             <div class="flex items-center">
                                 <input type="checkbox" 

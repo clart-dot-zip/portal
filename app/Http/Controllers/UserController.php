@@ -4,19 +4,26 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\Authentik\AuthentikSDK;
+use App\Services\Pim\PimService;
 use App\Models\User;
 use App\Mail\WelcomeEmail;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
     protected ?AuthentikSDK $authentik;
 
-    public function __construct()
+    protected PimService $pimService;
+
+    public function __construct(PimService $pimService)
     {
+        $this->pimService = $pimService;
+
         try {
             $apiToken = config('services.authentik.api_token');
             if ($apiToken) {
@@ -201,8 +208,32 @@ class UserController extends Controller
                 ]);
                 // Continue without groups data
             }
+
+            $pimEnabled = $this->pimService->isEnabled();
+            $pimOperational = $this->pimService->isOperational();
+            $pimRoles = collect();
+            $pimActivations = collect();
+            $serverUsernameMissing = $localUser && empty($localUser->server_username);
+
+            if ($localUser) {
+                $pimRoles = $this->pimService->rolesForUser($localUser);
+                $pimActivations = $localUser->pimActivations()
+                    ->with('initiatedBy')
+                    ->latest('activated_at')
+                    ->limit(10)
+                    ->get();
+            }
             
-            return view('users.show', compact('authentikUser', 'localUser', 'groups'));
+            return view('users.show', compact(
+                'authentikUser',
+                'localUser',
+                'groups',
+                'pimEnabled',
+                'pimOperational',
+                'pimRoles',
+                'pimActivations',
+                'serverUsernameMissing'
+            ));
             
         } catch (\Exception $e) {
             Log::error('Failed to get user details', [
@@ -259,13 +290,34 @@ class UserController extends Controller
             return redirect()->route('users.index')->with('error', 'Authentik SDK is not available.');
         }
 
+        $localUser = User::where('authentik_id', $id)->first();
+
+        if ($request->has('server_username')) {
+            $rawServerUsername = $request->input('server_username');
+            if ($rawServerUsername !== null) {
+                $normalizedServerUsername = trim($rawServerUsername);
+                $request->merge([
+                    'server_username' => $normalizedServerUsername === ''
+                        ? null
+                        : Str::lower($normalizedServerUsername),
+                ]);
+            }
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'username' => 'required|string|max:255',
             'is_active' => 'boolean',
             'groups' => 'array',
-            'groups.*' => 'string'
+            'groups.*' => 'string',
+            'server_username' => [
+                'nullable',
+                'string',
+                'max:64',
+                'regex:/^[a-z_][a-z0-9_-]*$/',
+                Rule::unique('users', 'server_username')->ignore(optional($localUser)->id),
+            ],
         ]);
 
         try {
@@ -281,11 +333,22 @@ class UserController extends Controller
             $updatedUser = $this->authentik->users()->update($id, $userData);
             
             // Update local user if exists
-            $localUser = User::where('authentik_id', $id)->first();
             if ($localUser) {
                 $localUser->update([
                     'name' => $request->name,
-                    'email' => $request->email
+                    'email' => $request->email,
+                    'username' => $request->username,
+                    'server_username' => $request->server_username,
+                    'is_active' => $request->has('is_active') && $request->is_active,
+                ]);
+            } else {
+                User::create([
+                    'authentik_id' => $id,
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'username' => $request->username,
+                    'server_username' => $request->server_username,
+                    'is_active' => $request->has('is_active') && $request->is_active,
                 ]);
             }
 
@@ -571,6 +634,18 @@ class UserController extends Controller
         }
 
         try {
+            if ($request->has('server_username')) {
+                $rawServerUsername = $request->input('server_username');
+                if ($rawServerUsername !== null) {
+                    $normalizedServerUsername = trim($rawServerUsername);
+                    $request->merge([
+                        'server_username' => $normalizedServerUsername === ''
+                            ? null
+                            : Str::lower($normalizedServerUsername),
+                    ]);
+                }
+            }
+
             // Validate the request
             $validated = $request->validate([
                 'username' => 'required|string|max:255',
@@ -583,13 +658,22 @@ class UserController extends Controller
                 'groups.*' => 'string',
                 'generate_password' => 'boolean',
                 'send_email' => 'boolean',
-                'force_password_change' => 'boolean'
+                'force_password_change' => 'boolean',
+                'server_username' => [
+                    'required',
+                    'string',
+                    'max:64',
+                    'regex:/^[a-z_][a-z0-9_-]*$/',
+                    Rule::unique('users', 'server_username'),
+                ],
             ]);
 
             Log::info('Starting user onboarding process', [
                 'username' => $validated['username'],
                 'email' => $validated['email']
             ]);
+
+            $validated['server_username'] = Str::lower(trim($validated['server_username']));
 
             // Generate a secure password if requested (for display/record purposes)
             $password = null;
@@ -685,7 +769,8 @@ class UserController extends Controller
                     'authentik_id' => $authentikUser['pk'],
                     'name' => $userData['name'],
                     'email' => $authentikUser['email'],
-                    'username' => $authentikUser['username']
+                    'username' => $authentikUser['username'],
+                    'server_username' => $validated['server_username'],
                 ]);
                 Log::info('Local user record created', ['user_id' => $authentikUser['pk']]);
             } catch (\Exception $e) {

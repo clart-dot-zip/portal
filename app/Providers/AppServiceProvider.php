@@ -3,10 +3,11 @@
 namespace App\Providers;
 
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use App\Services\Authentik\AuthentikSDK;
+use App\Services\Pim\PimService;
+use App\Services\Pim\ServerAccessManager;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,6 +22,20 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(\App\Services\ApplicationAccessService::class, function ($app) {
             return new \App\Services\ApplicationAccessService($app->make(AuthentikSDK::class));
+        });
+
+        $this->app->singleton(ServerAccessManager::class, function ($app) {
+            return new ServerAccessManager(
+                config('pim.server', []),
+                (bool) config('pim.dry_run', false)
+            );
+        });
+
+        $this->app->singleton(PimService::class, function ($app) {
+            return new PimService(
+                $app->make(ServerAccessManager::class),
+                config('pim', [])
+            );
         });
     }
 
