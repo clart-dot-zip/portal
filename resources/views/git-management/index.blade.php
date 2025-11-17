@@ -39,7 +39,7 @@
                                 <p class="text-sm text-gray-500">Repository URL: <span class="font-mono">{{ $server->repository_url }}</span></p>
                             @endif
                             <p class="text-sm text-gray-500">Default remote: <span class="font-mono">{{ $server->remote_name ?? $defaults['remote'] }}</span> · Default branch: <span class="font-mono">{{ $server->default_branch ?? $defaults['branch'] }}</span></p>
-                            <p class="text-sm text-gray-500">SSH target: {{ $server->ssh_username }}@{{ $server->ssh_host }}:{{ $server->ssh_port }}</p>
+                            <p class="text-sm text-gray-500">SSH target: <span class="font-mono">{{ sprintf('%s@%s:%s', $server->ssh_username ?? $defaults['ssh_user'], $server->ssh_host ?? 'localhost', $server->ssh_port ?? $defaults['ssh_port']) }}</span></p>
                         </div>
                         <div class="flex items-center space-x-3">
                             <form method="POST" action="{{ route('git-management.destroy', $server) }}" onsubmit="return confirm('Remove this server from Git Management?');">
