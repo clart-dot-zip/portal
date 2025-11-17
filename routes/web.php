@@ -8,6 +8,8 @@ use App\Http\Controllers\GroupController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PimController;
+use App\Http\Controllers\GitManagementController;
+use App\Http\Controllers\GitManagedServerController;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -106,6 +108,15 @@ Route::middleware(['auth', 'portal.admin:true'])->group(function () {
         Route::delete('/{id}/groups/{groupId}', [ApplicationController::class, 'removeGroupAccess'])->name('remove-group');
         Route::post('/{id}/users', [ApplicationController::class, 'addUserAccess'])->name('add-user');
         Route::delete('/{id}/access', [ApplicationController::class, 'removeAccess'])->name('remove-access');
+    });
+
+    // Git Management Routes - Admin access required
+    Route::prefix('git-management')->name('git-management.')->group(function () {
+        Route::get('/', [GitManagementController::class, 'index'])->name('index');
+        Route::get('/add', [GitManagedServerController::class, 'create'])->name('add');
+        Route::post('/add', [GitManagedServerController::class, 'store'])->name('store');
+        Route::post('/{server}/command', [GitManagementController::class, 'runCommand'])->name('command');
+        Route::delete('/{server}', [GitManagedServerController::class, 'destroy'])->name('destroy');
     });
 
     // Cache management routes

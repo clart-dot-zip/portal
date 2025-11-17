@@ -19,14 +19,17 @@
                         <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')" onclick="showNavigationLoading(event)">
                             {{ __('Users') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('pim.index')" :active="request()->routeIs('pim.*')" onclick="showNavigationLoading(event)">
+                        <!--<x-nav-link :href="route('pim.index')" :active="request()->routeIs('pim.*')" onclick="showNavigationLoading(event)">
                             {{ __('PIM') }}
-                        </x-nav-link>
+                        </x-nav-link>-->
                         <x-nav-link :href="route('groups.index')" :active="request()->routeIs('groups.*')" onclick="showNavigationLoading(event)">
                             {{ __('Groups') }}
                         </x-nav-link>
                         <x-nav-link :href="route('applications.index')" :active="request()->routeIs('applications.*')" onclick="showNavigationLoading(event)">
                             {{ __('Applications') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('git-management.index')" :active="request()->routeIs('git-management.*')" onclick="showNavigationLoading(event)">
+                            {{ __('Git Management') }}
                         </x-nav-link>
                     @endif
                 </div>
@@ -94,6 +97,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('applications.index')" :active="request()->routeIs('applications.*')" onclick="showNavigationLoading(event)">
                     {{ __('Applications') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('git-management.index')" :active="request()->routeIs('git-management.*')" onclick="showNavigationLoading(event)">
+                    {{ __('Git Management') }}
                 </x-responsive-nav-link>
             @endif
         </div>
