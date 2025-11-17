@@ -4,7 +4,6 @@ namespace App\Http\Requests\GitManagement;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Validator;
 
 class RunGitCommandRequest extends FormRequest
 {
@@ -16,25 +15,10 @@ class RunGitCommandRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'action' => ['required', Rule::in(['fetch', 'pull', 'checkout', 'status', 'custom'])],
-            'remote' => ['nullable', 'string', 'max:255', 'required_if:action,fetch,pull'],
-            'branch' => ['nullable', 'string', 'max:255', 'required_if:action,pull,checkout'],
-            'custom_command' => ['nullable', 'string', 'max:1024', 'required_if:action,custom'],
+            'action' => ['required', Rule::in(['sync', 'status'])],
+            'remote' => ['required', 'string', 'max:255'],
+            'branch' => ['nullable', 'string', 'max:255', 'required_if:action,sync'],
         ];
-    }
-
-    public function withValidator(Validator $validator): void
-    {
-        $validator->after(function (Validator $validator) {
-            if ($this->input('action') === 'custom') {
-                $command = trim((string) $this->input('custom_command'));
-                if ($command === '') {
-                    $validator->errors()->add('custom_command', 'Please provide a git command to run.');
-                } elseif (!str_starts_with($command, 'git ')) {
-                    $validator->errors()->add('custom_command', 'Only git commands are permitted.');
-                }
-            }
-        });
     }
 
     public function gitCommand(): string
@@ -44,17 +28,21 @@ class RunGitCommandRequest extends FormRequest
         $branch = $this->validated('branch');
 
         switch ($action) {
-            case 'fetch':
-                return sprintf('git fetch %s', escapeshellarg($remote ?? 'origin'));
-            case 'pull':
-                return sprintf('git pull %s %s', escapeshellarg($remote ?? 'origin'), escapeshellarg($branch ?? 'main'));
-            case 'checkout':
-                return sprintf('git checkout %s', escapeshellarg($branch ?? 'main'));
+            case 'sync':
+                $remoteArg = escapeshellarg($remote ?? 'origin');
+                $branchArg = escapeshellarg($branch ?? 'main');
+                $remoteBranchArg = escapeshellarg(($remote ?? 'origin') . '/' . ($branch ?? 'main'));
+
+                return sprintf(
+                    'git fetch %1$s %2$s && git checkout -B %2$s %3$s && git pull %1$s %2$s',
+                    $remoteArg,
+                    $branchArg,
+                    $remoteBranchArg
+                );
             case 'status':
                 return 'git status --short --branch';
-            case 'custom':
             default:
-                return trim((string) $this->validated('custom_command'));
+                return 'git status --short --branch';
         }
     }
 
@@ -64,7 +52,6 @@ class RunGitCommandRequest extends FormRequest
             'action' => $this->validated('action'),
             'remote' => $this->validated('remote'),
             'branch' => $this->validated('branch'),
-            'custom_command' => $this->validated('custom_command'),
         ];
     }
 }

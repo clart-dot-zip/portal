@@ -53,61 +53,51 @@
                     </div>
 
                     <div class="px-6 py-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div class="space-y-4">
-                            <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">{{ __('Quick Commands') }}</h4>
+                        <div class="space-y-5">
+                            <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">{{ __('Branch Sync') }}</h4>
+                            @php
+                                $defaultRemote = $server->remote_name ?? $defaults['remote'];
+                                $defaultBranch = $server->default_branch ?? $defaults['branch'];
+                                $recentBranches = collect($server->logs)->pluck('parameters.branch')->filter()->unique()->take(8);
+                            @endphp
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <x-git-management-command-card
-                                    :server="$server"
-                                    action="fetch"
-                                    :defaults="$defaults"
-                                    label="Fetch"
-                                    description="git fetch {{ $server->remote_name ?? $defaults['remote'] }}" />
-
-                                <x-git-management-command-card
-                                    :server="$server"
-                                    action="pull"
-                                    :defaults="$defaults"
-                                    label="Pull"
-                                    description="git pull {{ $server->remote_name ?? $defaults['remote'] }} {{ $server->default_branch ?? $defaults['branch'] }}" />
-
-                                <x-git-management-command-card
-                                    :server="$server"
-                                    action="checkout"
-                                    :defaults="$defaults"
-                                    label="Checkout"
-                                    description="Switch branch" />
-
-                                <x-git-management-command-card
-                                    :server="$server"
-                                    action="status"
-                                    :defaults="$defaults"
-                                    label="Status"
-                                    description="git status --short --branch" />
-                            </div>
-
-                            <div class="bg-gray-50 border border-dashed border-gray-200 rounded-lg p-4">
-                                <h5 class="text-sm font-semibold text-gray-700">{{ __('Custom Git Command') }}</h5>
-                                <p class="text-xs text-gray-500 mb-3">{{ __('Only commands beginning with "git" are permitted.') }}</p>
-
-                                <form method="POST" action="{{ route('git-management.command', $server) }}" class="space-y-3">
-                                    @csrf
-                                    <input type="hidden" name="action" value="custom">
+                            <form method="POST" action="{{ route('git-management.command', $server) }}" class="space-y-3">
+                                @csrf
+                                <input type="hidden" name="action" value="sync">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
-                                        <label for="custom-command-{{ $server->id }}" class="sr-only">{{ __('Git Command') }}</label>
-                                        <input type="text" id="custom-command-{{ $server->id }}" name="custom_command" class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="git fetch --all" required>
+                                        <label for="sync-remote-{{ $server->id }}" class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">{{ __('Remote') }}</label>
+                                        <input type="text" id="sync-remote-{{ $server->id }}" name="remote" value="{{ $defaultRemote }}" class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" required>
                                     </div>
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center space-x-2 text-xs text-gray-500">
-                                            <label for="custom-remote-{{ $server->id }}">{{ __('Remote') }}</label>
-                                            <input type="text" id="custom-remote-{{ $server->id }}" name="remote" value="{{ $server->remote_name ?? $defaults['remote'] }}" class="w-24 rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                                            <label for="custom-branch-{{ $server->id }}">{{ __('Branch') }}</label>
-                                            <input type="text" id="custom-branch-{{ $server->id }}" name="branch" value="{{ $server->default_branch ?? $defaults['branch'] }}" class="w-32 rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                                        </div>
-                                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-900 focus:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                                            {{ __('Run Command') }}
-                                        </button>
+                                    <div>
+                                        <label for="sync-branch-{{ $server->id }}" class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">{{ __('Branch') }}</label>
+                                        <input type="text" id="sync-branch-{{ $server->id }}" name="branch" value="{{ $defaultBranch }}" list="branch-options-{{ $server->id }}" class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" required>
+                                        <datalist id="branch-options-{{ $server->id }}">
+                                            <option value="{{ $defaultBranch }}"></option>
+                                            @foreach ($recentBranches as $branchOption)
+                                                @if ($branchOption !== $defaultBranch)
+                                                    <option value="{{ $branchOption }}"></option>
+                                                @endif
+                                            @endforeach
+                                        </datalist>
                                     </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <p class="text-xs text-gray-500">{{ __('Runs fetch, checkout, and pull in one step.') }}</p>
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        {{ __('Sync Branch') }}
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div class="border-t border-gray-100 pt-4">
+                                <form method="POST" action="{{ route('git-management.command', $server) }}" class="flex items-center justify-between">
+                                    @csrf
+                                    <input type="hidden" name="action" value="status">
+                                    <p class="text-xs text-gray-500">{{ __('Check current git status inside the container.') }}</p>
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-900 focus:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                        {{ __('Show Status') }}
+                                    </button>
                                 </form>
                             </div>
                         </div>

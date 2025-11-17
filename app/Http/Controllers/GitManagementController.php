@@ -29,9 +29,9 @@ class GitManagementController extends Controller
     public function runCommand(RunGitCommandRequest $request, GitManagedServer $server, GitCommandExecutor $executor)
     {
         $data = $request->validated();
-        $remote = $data['remote'] ?: ($server->remote_name ?: \config('pterodactyl.default_remote', 'origin'));
-        $branch = $data['branch'] ?: ($server->default_branch ?: \config('pterodactyl.default_branch', 'main'));
-        $gitCommand = $this->compileGitCommand($data['action'], $remote, $branch, $data['custom_command'] ?? null);
+    $remote = $data['remote'] ?: ($server->remote_name ?: \config('pterodactyl.default_remote', 'origin'));
+    $branch = $data['branch'] ?: ($server->default_branch ?: \config('pterodactyl.default_branch', 'main'));
+    $gitCommand = $this->compileGitCommand($data['action'], $remote, $branch);
 
         try {
             $result = $executor->runGitCommand(
@@ -58,20 +58,25 @@ class GitManagementController extends Controller
         }
     }
 
-    private function compileGitCommand(string $action, string $remote, string $branch, ?string $custom = null): string
+    private function compileGitCommand(string $action, string $remote, string $branch): string
     {
         switch ($action) {
-            case 'fetch':
-                return sprintf('git fetch %s', escapeshellarg($remote));
-            case 'pull':
-                return sprintf('git pull %s %s', escapeshellarg($remote), escapeshellarg($branch));
-            case 'checkout':
-                return sprintf('git checkout %s', escapeshellarg($branch));
+            case 'sync':
+                $remoteArg = escapeshellarg($remote);
+                $branchArg = escapeshellarg($branch);
+                $remoteBranchArg = escapeshellarg($remote . '/' . $branch);
+
+                return sprintf(
+                    'git fetch %1$s %2$s && git checkout -B %2$s %3$s && git pull %1$s %2$s',
+                    $remoteArg,
+                    $branchArg,
+                    $remoteBranchArg
+                );
             case 'status':
                 return 'git status --short --branch';
             case 'custom':
             default:
-                return trim((string) $custom);
+                return 'git status --short --branch';
         }
     }
 }
