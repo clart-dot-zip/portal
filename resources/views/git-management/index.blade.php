@@ -59,11 +59,24 @@
                             @php
                                 $defaultRemote = $server->remote_name ?? $defaults['remote'];
                                 $defaultBranch = $server->default_branch ?? $defaults['branch'];
-                                $branchOptions = ($server->available_branches ?? collect());
-                                if (! $branchOptions->contains($defaultBranch)) {
-                                    $branchOptions = $branchOptions->prepend($defaultBranch);
+                                $selectedBranch = $server->current_branch && $server->current_branch !== 'HEAD'
+                                    ? $server->current_branch
+                                    : $defaultBranch;
+
+                                $branchOptions = ($server->available_branches ?? collect())
+                                    ->filter()
+                                    ->unique()
+                                    ->values();
+
+                                if ($selectedBranch && ! $branchOptions->contains($selectedBranch)) {
+                                    $branchOptions = $branchOptions->prepend($selectedBranch);
                                 }
-                                $branchOptions = $branchOptions->whenEmpty(fn ($collection) => $collection->push($defaultBranch));
+
+                                if ($defaultBranch && ! $branchOptions->contains($defaultBranch)) {
+                                    $branchOptions = $branchOptions->push($defaultBranch);
+                                }
+
+                                $branchOptions = $branchOptions->whenEmpty(fn ($collection) => $collection->push($defaultBranch ?: 'main'));
                             @endphp
 
                             <form method="POST" action="{{ route('git-management.command', $server) }}" class="space-y-3">
@@ -76,7 +89,7 @@
                                     </div>
                                     <div>
                                         <label for="sync-branch-{{ $server->id }}" class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">{{ __('Branch') }}</label>
-                                        <input type="text" id="sync-branch-{{ $server->id }}" name="branch" value="{{ $defaultBranch }}" list="branch-options-{{ $server->id }}" class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" required>
+                                        <input type="text" id="sync-branch-{{ $server->id }}" name="branch" value="{{ $selectedBranch }}" list="branch-options-{{ $server->id }}" class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" required>
                                         <datalist id="branch-options-{{ $server->id }}">
                                             @foreach ($branchOptions as $branchOption)
                                                 <option value="{{ $branchOption }}"></option>
