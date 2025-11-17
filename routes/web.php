@@ -135,15 +135,17 @@ Route::middleware(['auth', 'portal.admin:true'])->group(function () {
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Debug routes for development
-Route::middleware('auth')->group(function () {
-    Route::prefix('debug/authentik')->name('authentik.')->group(function () {
-        Route::get('/users', [AuthentikController::class, 'users'])->name('users');
-        Route::get('/users/{userId}/groups', [AuthentikController::class, 'userGroups'])->name('users.groups');
-        Route::post('/users/{userId}/groups', [AuthentikController::class, 'addUserToGroup'])->name('users.groups.add');
-        Route::delete('/users/{userId}/groups/{groupId}', [AuthentikController::class, 'removeUserFromGroup'])->name('users.groups.remove');
-        Route::get('/groups', [AuthentikController::class, 'groups'])->name('groups');
-        Route::get('/groups/{groupId}/members', [AuthentikController::class, 'groupMembers'])->name('groups.members');
-        Route::get('/applications', [AuthentikController::class, 'applications'])->name('applications');
+// Debug routes for development; only register when debug mode is enabled
+if (\config('app.debug')) {
+    Route::middleware('auth')->group(function () {
+        Route::prefix('debug/authentik')->name('authentik.')->group(function () {
+            Route::get('/users', [AuthentikController::class, 'users'])->name('users');
+            Route::get('/users/{userId}/groups', [AuthentikController::class, 'userGroups'])->name('users.groups');
+            Route::post('/users/{userId}/groups', [AuthentikController::class, 'addUserToGroup'])->name('users.groups.add');
+            Route::delete('/users/{userId}/groups/{groupId}', [AuthentikController::class, 'removeUserFromGroup'])->name('users.groups.remove');
+            Route::get('/groups', [AuthentikController::class, 'groups'])->name('groups');
+            Route::get('/groups/{groupId}/members', [AuthentikController::class, 'groupMembers'])->name('groups.members');
+            Route::get('/applications', [AuthentikController::class, 'applications'])->name('applications');
+        });
     });
-});
+}
