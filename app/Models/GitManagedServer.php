@@ -64,10 +64,21 @@ class GitManagedServer extends Model
      */
     public function getDockerExecTargetAttribute(): string
     {
-        if (!empty($this->container_name)) {
-            return $this->container_name;
+    $containerName = $this->attributes['container_name'] ?? null;
+        if (!empty($containerName)) {
+            return $containerName;
         }
 
-        return 'pterodactyl_' . $this->pterodactyl_server_identifier;
+    $serverUuid = $this->attributes['pterodactyl_server_uuid'] ?? null;
+        if (!empty($serverUuid)) {
+            return $serverUuid;
+        }
+
+    $identifier = $this->attributes['pterodactyl_server_identifier'] ?? null;
+        if (!empty($identifier)) {
+            return 'pterodactyl_' . $identifier;
+        }
+
+        return 'pterodactyl_container';
     }
 }

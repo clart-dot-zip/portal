@@ -31,11 +31,13 @@ class GitCommandExecutor
             $log->update(['status' => 'running']);
 
             $ssh = $this->establishConnection($server);
-            $dockerCommand = $this->buildDockerCommand($server, $gitCommand);
+            $containerTarget = $this->resolveContainerTarget($ssh, $server);
+            $dockerCommand = $this->buildDockerCommand($containerTarget, $server, $gitCommand);
 
             Log::info('Executing git command through SSH', [
                 'server_id' => $server->id,
                 'command' => $dockerCommand,
+                'container_target' => $containerTarget,
             ]);
 
             $output = $ssh->exec($dockerCommand . ' 2>&1');
@@ -43,10 +45,14 @@ class GitCommandExecutor
 
             $result = new GitCommandResult($exitCode === 0, $exitCode ?? 0, $output ?? '');
 
-            $log->status = $result->successful ? 'succeeded' : 'failed';
-            $log->output = $result->output;
-            $log->error_output = $result->successful ? null : $result->output;
-            $log->save();
+            $log->update([
+                'status' => $result->successful ? 'succeeded' : 'failed',
+                'output' => $result->output,
+                'error_output' => $result->successful ? null : $result->output,
+                'parameters' => array_merge((array) $log->parameters, [
+                    'container_target' => $containerTarget,
+                ]),
+            ]);
 
             return $result;
         } catch (Throwable $exception) {
@@ -55,9 +61,10 @@ class GitCommandExecutor
                 'error' => $exception->getMessage(),
             ]);
 
-            $log->status = 'failed';
-            $log->error_output = $exception->getMessage();
-            $log->save();
+            $log->update([
+                'status' => 'failed',
+                'error_output' => $exception->getMessage(),
+            ]);
 
             throw $exception;
         }
@@ -66,17 +73,16 @@ class GitCommandExecutor
     /**
      * Build the docker exec invocation that runs git inside the container.
      */
-    private function buildDockerCommand(GitManagedServer $server, string $gitCommand): string
+    private function buildDockerCommand(string $containerTarget, GitManagedServer $server, string $gitCommand): string
     {
-    $repositoryPath = $server->repository_path ?: \config('pterodactyl.default_repository_path');
+        $repositoryPath = $server->repository_path ?: \config('pterodactyl.default_repository_path');
         if (empty($repositoryPath)) {
             throw new RuntimeException('Repository path is not configured for this server.');
         }
 
-        $target = $server->docker_exec_target;
         $innerCommand = sprintf('cd %s && %s', escapeshellarg($repositoryPath), $gitCommand);
 
-        return sprintf('docker exec -i %s sh -c %s', escapeshellarg($target), escapeshellarg($innerCommand));
+        return sprintf('docker exec -i %s sh -c %s', escapeshellarg($containerTarget), escapeshellarg($innerCommand));
     }
 
     /**
@@ -85,9 +91,9 @@ class GitCommandExecutor
     private function establishConnection(GitManagedServer $server): SSH2
     {
         $host = $server->ssh_host;
-    $port = $server->ssh_port ?: (int) \config('pterodactyl.default_ssh_port', 22);
-    $username = $server->ssh_username ?: \config('pterodactyl.default_ssh_user');
-    $keyPath = $server->ssh_private_key_path ?: \config('pterodactyl.default_ssh_key_path');
+        $port = $server->ssh_port ?: (int) \config('pterodactyl.default_ssh_port', 22);
+        $username = $server->ssh_username ?: \config('pterodactyl.default_ssh_user');
+        $keyPath = $server->ssh_private_key_path ?: \config('pterodactyl.default_ssh_key_path');
 
         if (empty($host) || empty($username)) {
             throw new RuntimeException('SSH host or username is not defined for this managed server.');
@@ -114,5 +120,33 @@ class GitCommandExecutor
         }
 
         return $ssh;
+    }
+
+    /**
+     * Resolve the correct container name by probing docker for candidate identifiers.
+     */
+    private function resolveContainerTarget(SSH2 $ssh, GitManagedServer $server): string
+    {
+        $candidates = array_values(array_unique(array_filter([
+            $server->container_name,
+            $server->pterodactyl_server_uuid,
+            $server->pterodactyl_server_identifier
+                ? 'pterodactyl_' . $server->pterodactyl_server_identifier
+                : null,
+        ])));
+
+        if (empty($candidates)) {
+            throw new RuntimeException('No container candidates available for this server.');
+        }
+
+        foreach ($candidates as $candidate) {
+            $ssh->exec(sprintf('docker container inspect %s >/dev/null 2>&1', escapeshellarg($candidate)));
+            $exitCode = $ssh->getExitStatus();
+            if ($exitCode === 0) {
+                return $candidate;
+            }
+        }
+
+        throw new RuntimeException('Unable to locate a matching container. Tried: ' . implode(', ', $candidates));
     }
 }

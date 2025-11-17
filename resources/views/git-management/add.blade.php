@@ -46,7 +46,7 @@
                             $identifier = $attributes['identifier'] ?? null;
                             $alreadyAdded = in_array($uuid, $existing, true);
                             $nodeName = $relationships['name'] ?? ($attributes['name'] ?? '');
-                            $defaultContainer = $identifier ? 'pterodactyl_' . $identifier : '';
+                            $defaultContainer = $uuid ?: ($identifier ? 'pterodactyl_' . $identifier : '');
                         @endphp
                         <div class="px-6 py-6 @if($alreadyAdded) bg-gray-50 @endif">
                             <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
