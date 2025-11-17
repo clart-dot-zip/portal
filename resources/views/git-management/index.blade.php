@@ -39,6 +39,7 @@
                                 <p class="text-sm text-gray-500">Repository URL: <span class="font-mono">{{ $server->repository_url }}</span></p>
                             @endif
                             <p class="text-sm text-gray-500">Default remote: <span class="font-mono">{{ $server->remote_name ?? $defaults['remote'] }}</span> · Default branch: <span class="font-mono">{{ $server->default_branch ?? $defaults['branch'] }}</span></p>
+                            <p class="text-sm text-gray-500">Current branch: <span class="font-mono">{{ $server->current_branch ?? 'Unknown' }}</span>@if ($server->branch_cache_timestamp) <span class="text-xs text-gray-400"> (cached {{ \Carbon::parse($server->branch_cache_timestamp)->diffForHumans() }})</span>@endif</p>
                             <p class="text-sm text-gray-500">SSH target: <span class="font-mono">{{ sprintf('%s@%s:%s', $server->ssh_username ?? $defaults['ssh_user'], $server->ssh_host ?? 'localhost', $server->ssh_port ?? $defaults['ssh_port']) }}</span></p>
                         </div>
                         <div class="flex items-center space-x-3">
@@ -58,7 +59,11 @@
                             @php
                                 $defaultRemote = $server->remote_name ?? $defaults['remote'];
                                 $defaultBranch = $server->default_branch ?? $defaults['branch'];
-                                $recentBranches = collect($server->logs)->pluck('parameters.branch')->filter()->unique()->take(8);
+                                $branchOptions = ($server->available_branches ?? collect());
+                                if (! $branchOptions->contains($defaultBranch)) {
+                                    $branchOptions = $branchOptions->prepend($defaultBranch);
+                                }
+                                $branchOptions = $branchOptions->whenEmpty(fn ($collection) => $collection->push($defaultBranch));
                             @endphp
 
                             <form method="POST" action="{{ route('git-management.command', $server) }}" class="space-y-3">
@@ -73,11 +78,8 @@
                                         <label for="sync-branch-{{ $server->id }}" class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">{{ __('Branch') }}</label>
                                         <input type="text" id="sync-branch-{{ $server->id }}" name="branch" value="{{ $defaultBranch }}" list="branch-options-{{ $server->id }}" class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" required>
                                         <datalist id="branch-options-{{ $server->id }}">
-                                            <option value="{{ $defaultBranch }}"></option>
-                                            @foreach ($recentBranches as $branchOption)
-                                                @if ($branchOption !== $defaultBranch)
-                                                    <option value="{{ $branchOption }}"></option>
-                                                @endif
+                                            @foreach ($branchOptions as $branchOption)
+                                                <option value="{{ $branchOption }}"></option>
                                             @endforeach
                                         </datalist>
                                     </div>

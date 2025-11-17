@@ -30,20 +30,7 @@ class GitCommandExecutor
         try {
             $log->update(['status' => 'running']);
 
-            $ssh = $this->establishConnection($server);
-            $containerTarget = $this->resolveContainerTarget($ssh, $server);
-            $dockerCommand = $this->buildDockerCommand($containerTarget, $server, $gitCommand);
-
-            Log::info('Executing git command through SSH', [
-                'server_id' => $server->id,
-                'command' => $dockerCommand,
-                'container_target' => $containerTarget,
-            ]);
-
-            $output = $ssh->exec($dockerCommand . ' 2>&1');
-            $exitCode = $ssh->getExitStatus();
-
-            $result = new GitCommandResult($exitCode === 0, $exitCode ?? 0, $output ?? '');
+            [$result, $containerTarget] = $this->execute($server, $gitCommand, true);
 
             $log->update([
                 'status' => $result->successful ? 'succeeded' : 'failed',
@@ -68,6 +55,16 @@ class GitCommandExecutor
 
             throw $exception;
         }
+    }
+
+    /**
+     * Execute a git command without logging a persistent record. Useful for probes.
+     */
+    public function probeGitCommand(GitManagedServer $server, string $gitCommand): GitCommandResult
+    {
+        [$result] = $this->execute($server, $gitCommand, false);
+
+        return $result;
     }
 
     /**
@@ -148,5 +145,36 @@ class GitCommandExecutor
         }
 
         throw new RuntimeException('Unable to locate a matching container. Tried: ' . implode(', ', $candidates));
+    }
+
+    /**
+     * Execute the provided git command inside the target container.
+     */
+    private function execute(GitManagedServer $server, string $gitCommand, bool $logExecution): array
+    {
+        $ssh = $this->establishConnection($server);
+        $containerTarget = $this->resolveContainerTarget($ssh, $server);
+        $dockerCommand = $this->buildDockerCommand($containerTarget, $server, $gitCommand);
+
+        if ($logExecution) {
+            Log::info('Executing git command through SSH', [
+                'server_id' => $server->id,
+                'command' => $dockerCommand,
+                'container_target' => $containerTarget,
+            ]);
+        } else {
+            Log::debug('Probing git command through SSH', [
+                'server_id' => $server->id,
+                'command' => $dockerCommand,
+                'container_target' => $containerTarget,
+            ]);
+        }
+
+        $output = $ssh->exec($dockerCommand . ' 2>&1');
+        $exitCode = $ssh->getExitStatus();
+
+        $result = new GitCommandResult($exitCode === 0, $exitCode ?? 0, $output ?? '');
+
+        return [$result, $containerTarget];
     }
 }
