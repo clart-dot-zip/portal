@@ -1,159 +1,272 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/png" href="{{ asset('images/clart.png') }}">
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>@yield('title', config('app.name', 'Laravel'))</title>
+    <title>@yield('title', config('app.name', 'Portal'))</title>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('head')
+</head>
+@php
+    $user = Auth::user();
+    $isPortalAdmin = request()->attributes->get('isPortalAdmin', view()->shared('isPortalAdmin', false));
+    $sidebarMenu = [
+        [
+            'label' => 'Dashboard',
+            'icon' => 'fas fa-tachometer-alt',
+            'route' => 'dashboard',
+            'active' => request()->routeIs('dashboard'),
+            'visible' => true,
+        ],
+        [
+            'label' => 'Users',
+            'icon' => 'fas fa-users',
+            'route' => 'users.index',
+            'active' => request()->routeIs('users.*'),
+            'visible' => $isPortalAdmin,
+        ],
+        [
+            'label' => 'Groups',
+            'icon' => 'fas fa-layer-group',
+            'route' => 'groups.index',
+            'active' => request()->routeIs('groups.*'),
+            'visible' => $isPortalAdmin,
+        ],
+        [
+            'label' => 'Applications',
+            'icon' => 'fas fa-th-large',
+            'route' => 'applications.index',
+            'active' => request()->routeIs('applications.*'),
+            'visible' => $isPortalAdmin,
+        ],
+        [
+            'label' => 'Git Management',
+            'icon' => 'fas fa-code-branch',
+            'route' => 'git-management.index',
+            'active' => request()->routeIs('git-management.*'),
+            'visible' => $isPortalAdmin,
+        ],
+        [
+            'label' => 'PIM',
+            'icon' => 'fas fa-id-card-alt',
+            'route' => 'pim.index',
+            'active' => request()->routeIs('pim.*'),
+            'visible' => $isPortalAdmin,
+        ],
+    ];
+@endphp
+<body class="hold-transition sidebar-mini layout-fixed">
+    <div id="portalPreloader" class="preloader flex-column justify-content-center align-items-center">
+        <img class="animation__shake" src="{{ asset('images/clart.png') }}" alt="{{ config('app.name', 'Portal') }}" height="60" width="60">
+        <p class="mt-2 text-muted">Loading Portal…</p>
+        <div class="portal-loading-bar mt-2"></div>
+    </div>
 
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
-    <body class="font-sans antialiased">
-        <!-- Loading Overlay -->
-        <div id="loadingOverlay" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
-            <div class="text-center">
-                <!-- Spinning Logo/Icon -->
-                <div class="mb-4">
-                    <div class="w-16 h-16 mx-auto animate-spin">
-                        <svg class="w-full h-full text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zm8 0a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z" clip-rule="evenodd"></path>
-                        </svg>
+    <div class="wrapper">
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+                </li>
+                <li class="nav-item d-none d-sm-inline-block">
+                    <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
+                </li>
+            </ul>
+
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+                        <i class="fas fa-expand-arrows-alt"></i>
+                    </a>
+                </li>
+                @auth
+                    <li class="nav-item dropdown">
+                        <a class="nav-link" data-toggle="dropdown" href="#">
+                            <i class="far fa-user"></i>
+                            <span class="ml-1">{{ $user->name ?? $user->username }}</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                            <span class="dropdown-item dropdown-header">
+                                {{ $user->name ?? $user->username }}
+                                <small class="d-block text-muted">{{ $user->email }}</small>
+                            </span>
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ route('users.profile') }}" class="dropdown-item">
+                                <i class="fas fa-id-badge mr-2"></i> Profile
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="fas fa-sign-out-alt mr-2"></i> Log Out
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                @endauth
+            </ul>
+        </nav>
+        <!-- /.navbar -->
+
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <a href="{{ route('dashboard') }}" class="brand-link">
+                <img src="{{ asset('images/clart.png') }}" alt="Logo" class="brand-image img-circle elevation-3" style="opacity: .9">
+                <span class="brand-text font-weight-light">{{ config('app.name', 'Portal') }}</span>
+            </a>
+
+            <div class="sidebar">
+                @auth
+                    <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                        <div class="image">
+                            <img src="https://www.gravatar.com/avatar/{{ md5(strtolower(trim($user->email ?? 'portal@example.com'))) }}?s=80&d=mp" class="img-circle elevation-2" alt="User Image">
+                        </div>
+                        <div class="info">
+                            <a href="{{ route('users.profile') }}" class="d-block">{{ $user->name ?? $user->username }}</a>
+                            <span class="text-muted d-block text-xs">{{ $user->email }}</span>
+                        </div>
                     </div>
-                </div>
-                
-                <!-- Loading Text -->
-                <div class="text-lg font-semibold text-gray-700 mb-2">Loading Dashboard</div>
-                <div class="text-sm text-gray-500">Fetching your data...</div>
-                
-                <!-- Progress Bar -->
-                <div class="mt-4 w-64 mx-auto">
-                    <div class="bg-gray-200 rounded-full h-1.5">
-                        <div id="loadingProgress" class="bg-blue-600 h-1.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
-                    </div>
-                </div>
+                @endauth
+
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        @foreach($sidebarMenu as $item)
+                            @continue(!$item['visible'])
+                            <li class="nav-item">
+                                <a href="{{ route($item['route']) }}" class="nav-link {{ $item['active'] ? 'active' : '' }}">
+                                    <i class="nav-icon {{ $item['icon'] }}"></i>
+                                    <p>{{ $item['label'] }}</p>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </nav>
             </div>
-        </div>
+        </aside>
 
-        <div class="min-h-screen bg-gray-100">
-            @include('layouts.navigation')
-
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        @isset($header)
+                            <div class="col-sm-12">
+                                {{ $header }}
+                            </div>
+                        @else
+                            <div class="col-sm-6">
+                                <h1 class="m-0">@yield('page_title', 'Dashboard')</h1>
+                            </div>
+                            <div class="col-sm-6">
+                                <ol class="breadcrumb float-sm-right">
+                                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Home</a></li>
+                                    <li class="breadcrumb-item active">@yield('page_title', 'Dashboard')</li>
+                                </ol>
+                            </div>
+                        @endisset
                     </div>
-                </header>
-            @endisset
+                </div>
+            </section>
 
-            <!-- Page Content -->
-            <main id="mainContent" style="opacity: 0; transition: opacity 0.5s ease-in;">
-                @hasSection('content')
-                    @yield('content')
-                @else
+            <section class="content">
+                <div id="mainContent" class="container-fluid" style="opacity: 0; transition: opacity .5s ease-in;">
+                    @if(session('status'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('status') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
+
+                    @hasSection('content')
+                        @yield('content')
+                    @endif
+
                     {{ $slot ?? '' }}
-                @endif
-            </main>
+                </div>
+            </section>
         </div>
 
-        <!-- Loading Management Script -->
-        <script>
-            class LoadingManager {
-                constructor() {
-                    this.loadingOverlay = document.getElementById('loadingOverlay');
-                    this.loadingProgress = document.getElementById('loadingProgress');
-                    this.mainContent = document.getElementById('mainContent');
-                    this.progress = 0;
-                    this.loaded = false;
-                    
-                    this.startLoading();
+        <footer class="main-footer">
+            <strong>&copy; {{ now()->year }} {{ config('app.name', 'Portal') }}.</strong>
+            <div class="float-right d-none d-sm-inline-block">
+                <b>Version</b> 1.0.0
+            </div>
+        </footer>
+
+        <aside class="control-sidebar control-sidebar-dark"></aside>
+    </div>
+
+    <script>
+        class LoadingManager {
+            constructor() {
+                this.loadingOverlay = document.getElementById('portalPreloader');
+                this.mainContent = document.getElementById('mainContent');
+                this.progress = 0;
+                this.loaded = false;
+
+                this.startLoading();
+            }
+
+            startLoading() {
+                this.updateProgress(20);
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => this.updateProgress(60));
+                } else {
+                    this.updateProgress(60);
                 }
-                
-                startLoading() {
-                    // Simulate progressive loading
-                    this.updateProgress(20); // Initial load
-                    
-                    // Check for DOM content loaded
-                    if (document.readyState === 'loading') {
-                        document.addEventListener('DOMContentLoaded', () => {
-                            this.updateProgress(50);
-                        });
-                    } else {
-                        this.updateProgress(50);
-                    }
-                    
-                    // Check for window load (all resources)
-                    if (document.readyState === 'complete') {
-                        setTimeout(() => this.updateProgress(80), 100);
+
+                if (document.readyState === 'complete') {
+                    setTimeout(() => this.completeLoading(), 350);
+                } else {
+                    window.addEventListener('load', () => {
+                        this.updateProgress(90);
                         setTimeout(() => this.completeLoading(), 300);
-                    } else {
-                        window.addEventListener('load', () => {
-                            this.updateProgress(80);
-                            setTimeout(() => this.completeLoading(), 300);
-                        });
+                    });
+                }
+
+                setTimeout(() => {
+                    if (!this.loaded) {
+                        this.completeLoading();
                     }
-                    
-                    // Fallback: Force completion after 5 seconds
-                    setTimeout(() => {
-                        if (!this.loaded) {
-                            this.completeLoading();
-                        }
-                    }, 5000);
+                }, 5000);
+            }
+
+            updateProgress(targetProgress) {
+                if (this.loaded || !this.loadingOverlay) return;
+                this.progress = Math.min(100, Math.max(this.progress, targetProgress));
+            }
+
+            completeLoading() {
+                if (this.loaded) return;
+                this.loaded = true;
+
+                if (this.loadingOverlay) {
+                    this.loadingOverlay.style.opacity = '0';
+                    this.loadingOverlay.style.transition = 'opacity .4s ease-out';
+                    setTimeout(() => this.loadingOverlay.style.display = 'none', 400);
                 }
-                
-                updateProgress(targetProgress) {
-                    if (this.loaded) return;
-                    
-                    const step = () => {
-                        if (this.progress < targetProgress) {
-                            this.progress += 2;
-                            this.loadingProgress.style.width = this.progress + '%';
-                            requestAnimationFrame(step);
-                        }
-                    };
-                    step();
-                }
-                
-                completeLoading() {
-                    if (this.loaded) return;
-                    this.loaded = true;
-                    
-                    // Complete progress bar
-                    this.updateProgress(100);
-                    
-                    setTimeout(() => {
-                        // Fade out loading overlay
-                        this.loadingOverlay.style.opacity = '0';
-                        this.loadingOverlay.style.transition = 'opacity 0.5s ease-out';
-                        
-                        // Fade in main content
-                        this.mainContent.style.opacity = '1';
-                        
-                        // Remove loading overlay after animation
-                        setTimeout(() => {
-                            this.loadingOverlay.style.display = 'none';
-                        }, 500);
-                    }, 300);
-                }
-                
-                // Public method to manually complete loading (for AJAX content)
-                forceComplete() {
-                    this.completeLoading();
+
+                if (this.mainContent) {
+                    this.mainContent.style.opacity = '1';
                 }
             }
-            
-            // Initialize loading manager
-            const loadingManager = new LoadingManager();
-            
-            // Expose globally for manual control
-            window.loadingManager = loadingManager;
-        </script>
-    </body>
+
+            forceComplete() {
+                this.completeLoading();
+            }
+        }
+
+        window.loadingManager = new LoadingManager();
+    </script>
+
+    @stack('scripts')
+</body>
 </html>

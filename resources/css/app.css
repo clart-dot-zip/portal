@@ -1,57 +1,130 @@
-/* Import dashboard styles */
-@import './dashboard.css';
+@import "@fortawesome/fontawesome-free/css/all.min.css";
+@import "overlayscrollbars/css/OverlayScrollbars.min.css";
+@import "admin-lte/dist/css/adminlte.min.css";
+@import "./dashboard.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Loading Animation Styles */
-@layer components {
-    /* Custom loading spinner */
-    .loading-spinner {
-        @apply inline-block w-6 h-6 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin;
-    }
-    
-    /* Loading overlay backdrop blur */
-    .loading-backdrop {
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-    }
-    
-    /* Smooth fade transitions */
-    .fade-in {
-        animation: fadeIn 0.5s ease-in;
-    }
-    
-    .fade-out {
-        animation: fadeOut 0.5s ease-out;
-    }
-    
-    /* Pulse animation for loading elements */
-    .loading-pulse {
-        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    
-    /* Progress bar animation */
-    .progress-bar {
-        transition: width 0.3s ease-out;
-    }
+:root {
+    --portal-primary: #3c8dbc;
+    --portal-secondary: #6c757d;
 }
 
-/* Keyframes for custom animations */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+body {
+    font-family: 'Source Sans Pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-@keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
+.main-header .navbar-nav .nav-link.active,
+.main-sidebar .nav-link.active {
+    background-color: var(--portal-primary);
+    color: #fff;
 }
 
-/* Loading states for buttons and links */
+.main-sidebar .nav-icon {
+    width: 18px;
+}
+
+.content-header h1,
+.content-header .breadcrumb {
+    margin-bottom: 0;
+}
+
+.preloader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.portal-loading-bar {
+    height: 4px;
+    width: 100%;
+    background: rgba(0,0,0,0.1);
+    overflow: hidden;
+    position: relative;
+}
+
+.portal-loading-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -40%;
+    height: 100%;
+    width: 40%;
+    background-color: var(--portal-primary);
+    animation: portal-loading 1.2s linear infinite;
+}
+
+@keyframes portal-loading {
+    0% { left: -40%; }
+    50% { left: 20%; }
+    100% { left: 100%; }
+}
+
+.adminlte-info-box {
+    border-radius: .5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.adminlte-info-box:hover {
+    transform: translate3d(0,-2px,0);
+    box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+}
+
+.table-avatar img {
+    width: 2.5rem;
+    height: 2.5rem;
+    object-fit: cover;
+}
+
+.card-primary:not(.card-outline) .card-header {
+    background-color: var(--portal-primary);
+}
+
+.btn-portal-primary {
+    background-color: var(--portal-primary);
+    border-color: var(--portal-primary);
+    color: #fff;
+}
+
+.btn-portal-primary:hover {
+    color: #fff;
+    filter: brightness(0.9);
+}
+
+.badge-soft-success {
+    background-color: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+}
+
+.badge-soft-danger {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+}
+
+.badge-soft-warning {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+.badge-soft-info {
+    background-color: rgba(23, 162, 184, 0.15);
+    color: #17a2b8;
+}
+
+.modal-header {
+    border-bottom: 0;
+}
+
+.modal-footer {
+    border-top: 0;
+}
+
 .loading-button {
-    @apply opacity-75 cursor-not-allowed;
+    opacity: .75;
+    cursor: not-allowed;
     position: relative;
 }
 
@@ -69,31 +142,84 @@
     animation: spin 1s linear infinite;
 }
 
-/* Skeleton loading for content */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(0,0,0,0.1);
+    border-top-color: var(--portal-primary);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+}
+
+.loading-backdrop {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.fade-in {
+    animation: fadeIn .5s ease-in;
+}
+
+.fade-out {
+    animation: fadeOut .5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+.loading-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .7; }
+}
+
+.progress-bar {
+    transition: width .3s ease-out;
+}
+
 .skeleton {
-    @apply bg-gray-200 animate-pulse rounded;
+    background-color: #f1f2f6;
+    border-radius: .5rem;
+    animation: pulse 2s ease-in-out infinite;
 }
 
 .skeleton-text {
-    @apply h-4 bg-gray-200 animate-pulse rounded mb-2;
+    height: 1rem;
+    background-color: #f1f2f6;
+    border-radius: .25rem;
+    margin-bottom: .5rem;
+    animation: pulse 2s ease-in-out infinite;
 }
 
 .skeleton-text:last-child {
-    @apply mb-0 w-3/4;
+    width: 75%;
+    margin-bottom: 0;
 }
 
-/* Loading states for dashboard cards */
 .dashboard-card.loading {
-    @apply opacity-60;
+    opacity: .6;
+    position: relative;
+    overflow: hidden;
 }
 
 .dashboard-card.loading::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
     animation: shimmer 1.5s infinite;
 }
@@ -101,8 +227,4 @@
 @keyframes shimmer {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
 }

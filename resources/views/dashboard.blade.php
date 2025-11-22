@@ -2,303 +2,148 @@
 
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Dashboard') }}
-            </h2>
-            <div class="text-sm text-gray-500">
-                Last updated: {{ now()->format('M d, Y \a\t g:i A') }}
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+            <div>
+                <h1 class="h3 text-dark mb-1">{{ __('Dashboard') }}</h1>
+                <p class="text-muted mb-0">{{ __('Overview of your Authentik environment') }}</p>
+            </div>
+            <div class="text-muted small mt-3 mt-md-0">
+                <i class="far fa-clock mr-1"></i>
+                {{ __('Last updated:') }} {{ now()->format('M d, Y \a\t g:i A') }}
             </div>
         </div>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            
-            <!-- Welcome Banner -->
-            <div class="welcome-banner overflow-hidden shadow-lg sm:rounded-lg dashboard-card">
-                <div class="p-8 text-white">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h3 class="text-2xl font-bold mb-2">
-                                Welcome back, {{ auth()->user()->name ?? auth()->user()->username }}!
-                            </h3>
-                            <p class="text-blue-100">
-                                Here's an overview of your Authentik instance
-                            </p>
-                        </div>
-                        <div class="hidden md:block">
-                            <svg class="w-24 h-24 text-blue-200" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zm8 0a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z" clip-rule="evenodd"></path>
-                            </svg>
+    <div class="row">
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-info adminlte-info-box">
+                <div class="inner">
+                    <h3>{{ number_format($stats['users']['total']) }}</h3>
+                    <p>Total Users</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <a href="{{ route('users.index') }}" class="small-box-footer">
+                    Manage users <i class="fas fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-success adminlte-info-box">
+                <div class="inner">
+                    <h3>{{ number_format($stats['users']['active']) }}<sup class="text-sm">/{{ number_format($stats['users']['inactive']) }}</sup></h3>
+                    <p>Active / Inactive</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <span class="small-box-footer text-white-50">
+                    {{ __('Tracked users in Authentik') }}
+                </span>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-warning adminlte-info-box">
+                <div class="inner text-white">
+                    <h3>{{ number_format($stats['applications']['total']) }}</h3>
+                    <p class="text-white">Applications</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-th-large"></i>
+                </div>
+                <a href="{{ route('applications.index') }}" class="small-box-footer text-white">
+                    View catalogue <i class="fas fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-danger adminlte-info-box">
+                <div class="inner">
+                    <h3 class="text-white text-capitalize">{{ $stats['system']['authentik_status'] }}</h3>
+                    <p class="text-white">System Status</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-server"></i>
+                </div>
+                <span class="small-box-footer text-white-50">
+                    {{ $stats['system']['api_response_time'] > 0 ? $stats['system']['api_response_time'].' ms API' : 'No connection' }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="info-box">
+                <span class="info-box-icon bg-primary"><i class="fas fa-user-shield"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Portal Admins</span>
+                    <span class="info-box-number">{{ number_format($stats['users']['portal_admins'] ?? 0) }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="info-box">
+                <span class="info-box-icon bg-purple"><i class="fas fa-sign-in-alt"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Recent Logins (7d)</span>
+                    <span class="info-box-number">{{ number_format($stats['users']['recent_logins']) }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="info-box">
+                <span class="info-box-icon bg-success"><i class="fas fa-layer-group"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Groups w/ Members</span>
+                    <span class="info-box-number">{{ number_format($stats['groups']['total'] - $stats['groups']['empty_groups']) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card card-primary card-outline h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">User Activity</h3>
+                    <span class="badge badge-pill badge-soft-success">Real-time</span>
+                </div>
+                <div class="card-body">
+                    <div class="position-relative" style="min-height: 260px;">
+                        <canvas id="userActivityChart"></canvas>
+                        <div id="userActivityFallback" class="position-absolute w-100 h-100 d-flex flex-column align-items-center justify-content-center text-center text-muted" style="display:none;">
+                            <p class="mb-1">User Activity</p>
+                            <div class="display-4 text-success">{{ $stats['users']['active'] }}</div>
+                            <small>Active Users</small>
+                            @if($stats['users']['inactive'] > 0)
+                                <div class="h5 text-danger mt-2">{{ $stats['users']['inactive'] }}</div>
+                                <small>Inactive Users</small>
+                            @endif
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Statistics Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                <!-- Total Users -->
-                <div class="bg-white overflow-hidden shadow-lg rounded-lg dashboard-card">
-                    <div class="p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-7a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="ml-4 flex-1">
-                                <p class="text-sm font-medium text-gray-500 truncate">Total Users</p>
-                                <p class="text-2xl font-semibold text-gray-900 stat-number">{{ number_format($stats['users']['total']) }}</p>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <div class="flex items-center text-sm">
-                                <span class="text-green-600 font-medium status-indicator status-active">{{ $stats['users']['active'] }}</span>
-                                <span class="text-gray-500 ml-1">active</span>
-                                @if($stats['users']['inactive'] > 0)
-                                    <span class="text-gray-400 ml-2">•</span>
-                                    <span class="text-red-600 font-medium ml-2 status-indicator status-inactive">{{ $stats['users']['inactive'] }}</span>
-                                    <span class="text-gray-500 ml-1">inactive</span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card card-primary card-outline h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">Group Membership</h3>
+                    <span class="badge badge-pill badge-soft-info">Top Groups</span>
                 </div>
-
-                <!-- Total Groups -->
-                <div class="bg-white overflow-hidden shadow-lg rounded-lg">
-                    <div class="p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="ml-4 flex-1">
-                                <p class="text-sm font-medium text-gray-500 truncate">Total Groups</p>
-                                <p class="text-2xl font-semibold text-gray-900">{{ number_format($stats['groups']['total']) }}</p>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <div class="flex items-center text-sm">
-                                @if($stats['groups']['superuser_groups'] > 0)
-                                    <span class="text-purple-600 font-medium">{{ $stats['groups']['superuser_groups'] }}</span>
-                                    <span class="text-gray-500 ml-1">admin groups</span>
-                                @endif
-                                @if($stats['groups']['empty_groups'] > 0)
-                                    <span class="text-gray-400 ml-2">•</span>
-                                    <span class="text-orange-600 font-medium ml-2">{{ $stats['groups']['empty_groups'] }}</span>
-                                    <span class="text-gray-500 ml-1">empty</span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Logins -->
-                <div class="bg-white overflow-hidden shadow-lg rounded-lg">
-                    <div class="p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="ml-4 flex-1">
-                                <p class="text-sm font-medium text-gray-500 truncate">Recent Logins</p>
-                                <p class="text-2xl font-semibold text-gray-900">{{ number_format($stats['users']['recent_logins']) }}</p>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <div class="flex items-center text-sm text-gray-500">
-                                <span>Last 7 days</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Applications -->
-                <div class="bg-white overflow-hidden shadow-lg rounded-lg">
-                    <div class="p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-indigo-500 rounded-lg flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="ml-4 flex-1">
-                                <p class="text-sm font-medium text-gray-500 truncate">Applications</p>
-                                <p class="text-2xl font-semibold text-gray-900">{{ number_format($stats['applications']['total']) }}</p>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <div class="flex items-center text-sm text-gray-500">
-                                <span>Connected services</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- System Status -->
-                <div class="bg-white overflow-hidden shadow-lg rounded-lg">
-                    <div class="p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                @if($stats['system']['authentik_status'] === 'connected')
-                                    <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
-                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                        </svg>
+                <div class="card-body">
+                    <div class="position-relative" style="min-height: 260px;">
+                        <canvas id="groupMembershipChart"></canvas>
+                        <div id="groupMembershipFallback" class="position-absolute w-100 h-100 d-flex align-items-center justify-content-center" style="display:none;">
+                            <div class="text-center text-muted">
+                                <p class="mb-3">Group data unavailable</p>
+                                @foreach(array_slice($chartData['group_membership'], 0, 3) as $group)
+                                    <div class="mb-2">
+                                        <strong>{{ $group['name'] }}</strong>
+                                        <small class="d-block text-muted">{{ $group['members'] }} members</small>
                                     </div>
-                                @elseif($stats['system']['authentik_status'] === 'error')
-                                    <div class="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center">
-                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                                        </svg>
-                                    </div>
-                                @else
-                                    <div class="w-12 h-12 bg-gray-500 rounded-lg flex items-center justify-center">
-                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                    </div>
-                                @endif
-                            </div>
-                            <div class="ml-4 flex-1">
-                                <p class="text-sm font-medium text-gray-500 truncate">System Status</p>
-                                <p class="text-sm font-semibold 
-                                    @if($stats['system']['authentik_status'] === 'connected') text-green-600
-                                    @elseif($stats['system']['authentik_status'] === 'error') text-red-600
-                                    @else text-gray-600 @endif">
-                                    {{ ucfirst($stats['system']['authentik_status']) }}
-                                </p>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <div class="flex items-center text-sm text-gray-500">
-                                @if($stats['system']['api_response_time'] > 0)
-                                    <span>{{ $stats['system']['api_response_time'] }}ms response</span>
-                                @else
-                                    <span>No connection</span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Charts Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- User Activity Chart -->
-                <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg">
-                    <div class="p-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">User Activity</h3>
-                        <div class="relative h-64">
-                            <canvas id="userActivityChart" class="w-full h-full"></canvas>
-                            <div id="userActivityFallback" class="hidden absolute inset-0 flex items-center justify-center">
-                                <div class="text-center">
-                                    <div class="text-sm text-gray-500 mb-2">User Activity</div>
-                                    <div class="text-2xl font-bold text-green-600">{{ $stats['users']['active'] }}</div>
-                                    <div class="text-xs text-gray-400">Active Users</div>
-                                    @if($stats['users']['inactive'] > 0)
-                                        <div class="text-lg font-semibold text-red-600 mt-2">{{ $stats['users']['inactive'] }}</div>
-                                        <div class="text-xs text-gray-400">Inactive Users</div>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Group Membership Chart -->
-                <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg">
-                    <div class="p-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Group Membership</h3>
-                        <div class="relative h-64">
-                            <canvas id="groupMembershipChart" class="w-full h-full"></canvas>
-                            <div id="groupMembershipFallback" class="hidden absolute inset-0 flex items-center justify-center">
-                                <div class="text-center">
-                                    <div class="text-sm text-gray-500 mb-4">Top Groups</div>
-                                    @foreach(array_slice($chartData['group_membership'], 0, 3) as $group)
-                                        <div class="mb-2">
-                                            <div class="font-medium text-gray-900">{{ $group['name'] }}</div>
-                                            <div class="text-sm text-gray-500">{{ $group['members'] }} members</div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recent Activity -->
-            <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg">
-                <div class="p-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <a href="{{ route('users.index') }}" class="group relative rounded-lg p-6 bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors quick-action-card">
-                            <div>
-                                <span class="rounded-lg inline-flex p-3 bg-blue-50 text-blue-700 ring-4 ring-white">
-                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-7a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                                    </svg>
-                                </span>
-                            </div>
-                            <div class="mt-4">
-                                <h3 class="text-lg font-medium text-gray-900 group-hover:text-blue-600">
-                                    Manage Users
-                                    <span class="absolute inset-0" aria-hidden="true"></span>
-                                </h3>
-                                <p class="mt-2 text-sm text-gray-500">
-                                    View, search, and manage user accounts
-                                </p>
-                            </div>
-                        </a>
-
-                        <a href="{{ route('groups.index') }}" class="group relative rounded-lg p-6 bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors quick-action-card">
-                            <div>
-                                <span class="rounded-lg inline-flex p-3 bg-green-50 text-green-700 ring-4 ring-white">
-                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                </span>
-                            </div>
-                            <div class="mt-4">
-                                <h3 class="text-lg font-medium text-gray-900 group-hover:text-green-600">
-                                    Manage Groups
-                                    <span class="absolute inset-0" aria-hidden="true"></span>
-                                </h3>
-                                <p class="mt-2 text-sm text-gray-500">
-                                    Configure groups and permissions
-                                </p>
-                            </div>
-                        </a>
-
-                        <div class="group relative rounded-lg p-6 bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors cursor-pointer quick-action-card" onclick="syncData()">
-                            <div>
-                                <span class="rounded-lg inline-flex p-3 bg-purple-50 text-purple-700 ring-4 ring-white">
-                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                    </svg>
-                                </span>
-                            </div>
-                            <div class="mt-4">
-                                <h3 class="text-lg font-medium text-gray-900 group-hover:text-purple-600">
-                                    Sync Data
-                                </h3>
-                                <p class="mt-2 text-sm text-gray-500">
-                                    Refresh users and groups from Authentik
-                                </p>
+                                @endforeach
                             </div>
                         </div>
                     </div>
@@ -307,116 +152,151 @@
         </div>
     </div>
 
-    <!-- Chart.js Library -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card card-outline card-primary h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">Quick Actions</h3>
+                    <span class="badge badge-soft-primary">Admin</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ route('users.index') }}" class="btn btn-outline-primary btn-block text-left">
+                                <i class="fas fa-users mr-2"></i> Manage Users
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ route('groups.index') }}" class="btn btn-outline-success btn-block text-left">
+                                <i class="fas fa-layer-group mr-2"></i> Manage Groups
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <button type="button" class="btn btn-outline-warning btn-block text-left" onclick="syncData()">
+                                <i class="fas fa-sync mr-2"></i> Sync Directory
+                            </button>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ route('applications.index') }}" class="btn btn-outline-info btn-block text-left">
+                                <i class="fas fa-th mr-2"></i> Applications
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ route('git-management.index') }}" class="btn btn-outline-secondary btn-block text-left">
+                                <i class="fas fa-code-branch mr-2"></i> Git Management
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ route('pim.index') }}" class="btn btn-outline-dark btn-block text-left">
+                                <i class="fas fa-id-card-alt mr-2"></i> PIM Sessions
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card card-outline card-danger h-100">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">Status & Sync</h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Stay current with Authentik data.</p>
+                    <ul class="list-unstyled mb-4">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success mr-2"></i> User and group cache overview
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-database text-info mr-2"></i> Sync logs recorded automatically
+                        </li>
+                        <li>
+                            <i class="fas fa-clock text-warning mr-2"></i> Last sync {{ $stats['system']['last_sync'] ?? 'Not recorded' }}
+                        </li>
+                    </ul>
+                    <button type="button" class="btn btn-portal-primary btn-block" onclick="syncData()">
+                        <i class="fas fa-sync mr-2"></i> Sync Users & Groups
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <script>
-        let chartsInitialized = false; // Flag to prevent double initialization
-        
+        let chartsInitialized = false;
+        const portalStats = <?php echo json_encode($stats); ?>;
+        const portalGroupMembership = <?php echo json_encode($chartData['group_membership'] ?? []); ?>;
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Update loading progress for dashboard-specific content
             if (window.loadingManager) {
                 window.loadingManager.updateProgress(60);
             }
-            
-            // Add a timeout to show fallback if Chart.js takes too long to load
+
             setTimeout(function() {
                 if (typeof Chart === 'undefined') {
-                    console.error('Chart.js failed to load, showing fallback content');
                     showFallbackContent();
                     return;
                 }
-                
+
                 if (!chartsInitialized) {
                     initializeCharts();
                 }
-                
-                // Mark charts as ready and complete loading
+
                 if (window.loadingManager) {
                     window.loadingManager.updateProgress(90);
-                    setTimeout(() => {
-                        window.loadingManager.forceComplete();
-                    }, 500);
+                    setTimeout(() => window.loadingManager.forceComplete(), 500);
                 }
-            }, 2000); // Wait 2 seconds for Chart.js to load
-            
-            // Also try to initialize immediately if Chart.js is already available
+            }, 2000);
+
             if (typeof Chart !== 'undefined' && !chartsInitialized) {
                 initializeCharts();
-                
-                // Complete loading faster if charts are ready
                 if (window.loadingManager) {
                     window.loadingManager.updateProgress(90);
-                    setTimeout(() => {
-                        window.loadingManager.forceComplete();
-                    }, 200);
+                    setTimeout(() => window.loadingManager.forceComplete(), 200);
                 }
             }
         });
-        
+
         function showFallbackContent() {
             const userCanvas = document.getElementById('userActivityChart');
             const groupCanvas = document.getElementById('groupMembershipChart');
-            
+
             if (userCanvas) {
                 userCanvas.style.display = 'none';
-                document.getElementById('userActivityFallback').classList.remove('hidden');
+                document.getElementById('userActivityFallback').style.display = 'flex';
             }
-            
+
             if (groupCanvas) {
                 groupCanvas.style.display = 'none';
-                document.getElementById('groupMembershipFallback').classList.remove('hidden');
+                document.getElementById('groupMembershipFallback').style.display = 'flex';
             }
-            
-            // Complete loading even with fallback content
+
             if (window.loadingManager) {
-                setTimeout(() => {
-                    window.loadingManager.forceComplete();
-                }, 300);
+                setTimeout(() => window.loadingManager.forceComplete(), 300);
             }
         }
-        
+
         function initializeCharts() {
-            if (chartsInitialized) {
-                console.log('Charts already initialized, skipping...');
-                return;
-            }
-            
-            // Mark as initialized to prevent double initialization
+            if (chartsInitialized) return;
             chartsInitialized = true;
-            
-            // Debug: Check if Chart.js is loaded
+
             if (typeof Chart === 'undefined') {
-                console.error('Chart.js is not loaded!');
                 showFallbackContent();
                 return;
             }
-            
-            console.log('Initializing charts...');
-            
-            // Debug: Log the data being passed
-            console.log('Stats data:', @json($stats));
-            console.log('Chart data:', @json($chartData));
-            
-            // User Activity Pie Chart
+
             const userActivityCanvas = document.getElementById('userActivityChart');
             if (userActivityCanvas) {
                 try {
                     const userActivityCtx = userActivityCanvas.getContext('2d');
-                    const userActivityData = [{{ $stats['users']['active'] }}, {{ $stats['users']['inactive'] }}];
-                    
-                    console.log('User activity data:', userActivityData);
-                    
                     new Chart(userActivityCtx, {
                         type: 'doughnut',
                         data: {
                             labels: ['Active', 'Inactive'],
                             datasets: [{
-                                data: userActivityData,
-                                backgroundColor: [
-                                    '#10B981', // Green for active
-                                    '#EF4444'  // Red for inactive
-                                ],
+                                data: [portalStats.users.active, portalStats.users.inactive],
+                                backgroundColor: ['#00a65a', '#dc3545'],
                                 borderWidth: 2,
                                 borderColor: '#ffffff'
                             }]
@@ -424,198 +304,104 @@
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
+                            cutout: '65%',
                             plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        padding: 20,
-                                        usePointStyle: true
-                                    }
-                                }
-                            },
-                            cutout: '60%'
+                                legend: { position: 'bottom' }
+                            }
                         }
                     });
-                    
-                    console.log('User activity chart created successfully');
                 } catch (error) {
                     console.error('Error creating user activity chart:', error);
                     userActivityCanvas.style.display = 'none';
-                    document.getElementById('userActivityFallback').classList.remove('hidden');
+                    document.getElementById('userActivityFallback').style.display = 'flex';
                 }
-            } else {
-                console.error('User activity chart canvas not found!');
             }
 
-            // Group Membership Bar Chart
             const groupMembershipCanvas = document.getElementById('groupMembershipChart');
             if (groupMembershipCanvas) {
                 try {
                     const groupMembershipCtx = groupMembershipCanvas.getContext('2d');
-                    const groupData = @json($chartData['group_membership']);
-                    
-                    console.log('Group membership data:', groupData);
-                    
-                    if (!groupData || groupData.length === 0) {
+                    if (!portalGroupMembership || portalGroupMembership.length === 0) {
                         groupMembershipCanvas.style.display = 'none';
-                        document.getElementById('groupMembershipFallback').classList.remove('hidden');
+                        document.getElementById('groupMembershipFallback').style.display = 'flex';
                         return;
                     }
-                    
+
                     new Chart(groupMembershipCtx, {
                         type: 'bar',
                         data: {
-                            labels: groupData.map(item => item.name.length > 15 ? item.name.substring(0, 15) + '...' : item.name),
+                            labels: portalGroupMembership.map(item => item.name.length > 18 ? item.name.substring(0, 18) + '…' : item.name),
                             datasets: [{
                                 label: 'Members',
-                                data: groupData.map(item => item.members),
-                                backgroundColor: '#3B82F6',
-                                borderColor: '#2563EB',
-                                borderWidth: 1,
-                                borderRadius: 4
+                                data: portalGroupMembership.map(item => item.members),
+                                backgroundColor: '#3c8dbc'
                             }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                }
-                            },
+                            plugins: { legend: { display: false } },
                             scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        stepSize: 1
-                                    }
-                                },
-                                x: {
-                                    ticks: {
-                                        maxRotation: 45,
-                                        minRotation: 0
-                                    }
-                                }
+                                y: { beginAtZero: true },
+                                x: { ticks: { maxRotation: 35, minRotation: 0 } }
                             }
                         }
                     });
-                    
-                    console.log('Group membership chart created successfully');
                 } catch (error) {
                     console.error('Error creating group membership chart:', error);
                     groupMembershipCanvas.style.display = 'none';
-                    document.getElementById('groupMembershipFallback').classList.remove('hidden');
+                    document.getElementById('groupMembershipFallback').style.display = 'flex';
                 }
-            } else {
-                console.error('Group membership chart canvas not found!');
             }
         }
 
-        // Sync function with enhanced loading
         function syncData() {
-            // Show loading state
-            const syncButton = event.currentTarget;
-            const originalContent = syncButton.innerHTML;
-            
-            // Create better loading button
-            syncButton.innerHTML = `
-                <div class="flex items-center justify-center">
-                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-700 mr-2"></div>
-                    <span>Syncing...</span>
-                </div>
-            `;
-            syncButton.disabled = true;
-            syncButton.classList.add('opacity-75', 'cursor-not-allowed');
-            
-            // Show global loading overlay for sync
-            if (window.loadingManager) {
-                const overlay = document.createElement('div');
-                overlay.id = 'syncOverlay';
-                overlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center';
-                overlay.innerHTML = `
-                    <div class="bg-white rounded-lg p-6 text-center">
-                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                        <div class="text-lg font-semibold text-gray-700">Syncing Data</div>
-                        <div class="text-sm text-gray-500">This may take a moment...</div>
-                    </div>
-                `;
-                document.body.appendChild(overlay);
-            }
-            
-            // Sync users and groups
+            const button = event.currentTarget;
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm mr-2" role="status"></span> Syncing...';
+
+            const overlay = document.createElement('div');
+            overlay.id = 'syncOverlay';
+            overlay.className = 'position-fixed w-100 h-100 top-0 left-0 d-flex align-items-center justify-content-center loading-backdrop';
+            overlay.style.zIndex = 1080;
+            overlay.innerHTML = `
+                <div class="bg-white rounded-lg shadow-lg p-4 text-center">
+                    <div class="spinner-border text-primary mb-3" role="status"></div>
+                    <p class="mb-0">Syncing data with Authentik...</p>
+                </div>`;
+            document.body.appendChild(overlay);
+
             Promise.all([
-                fetch('{{ route("users.sync") }}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
-                }),
-                fetch('{{ route("groups.sync") }}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
-                })
+                fetch('{{ route("users.sync") }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }),
+                fetch('{{ route("groups.sync") }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } })
             ])
-            .then(responses => Promise.all(responses.map(r => r.json())))
-            .then(results => {
-                // Remove sync overlay
-                const syncOverlay = document.getElementById('syncOverlay');
-                if (syncOverlay) {
-                    syncOverlay.remove();
+            .then(responses => {
+                if (!responses.every(response => response.ok)) {
+                    throw new Error('Failed to sync data');
                 }
-                
-                // Restore button content
-                syncButton.innerHTML = originalContent;
-                syncButton.disabled = false;
-                syncButton.classList.remove('opacity-75', 'cursor-not-allowed');
-                
-                // Show success message
                 showMessage('Data synced successfully!', 'success');
-                
-                // Refresh page after a moment with loading
-                setTimeout(() => {
-                    // Show loading overlay before refresh
-                    if (window.loadingManager && window.loadingManager.loadingOverlay) {
-                        window.loadingManager.loadingOverlay.style.display = 'flex';
-                        window.loadingManager.loadingOverlay.style.opacity = '1';
-                    }
-                    window.location.reload();
-                }, 1500);
+                setTimeout(() => window.location.reload(), 1200);
             })
             .catch(error => {
-                // Remove sync overlay
-                const syncOverlay = document.getElementById('syncOverlay');
-                if (syncOverlay) {
-                    syncOverlay.remove();
-                }
-                
-                // Restore button content
-                syncButton.innerHTML = originalContent;
-                syncButton.disabled = false;
-                syncButton.classList.remove('opacity-75', 'cursor-not-allowed');
-                
+                console.error('Sync error:', error);
                 showMessage('Sync failed: ' + error.message, 'error');
+            })
+            .finally(() => {
+                const overlayEl = document.getElementById('syncOverlay');
+                if (overlayEl) overlayEl.remove();
+                button.disabled = false;
+                button.innerHTML = originalText;
             });
         }
 
         function showMessage(message, type) {
-            // Create message element
             const messageDiv = document.createElement('div');
-            messageDiv.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`;
-            messageDiv.innerHTML = message;
-
-            // Add to page
+            messageDiv.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+            messageDiv.setAttribute('role', 'alert');
+            messageDiv.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="ml-auto mb-1 close text-white" data-dismiss="toast" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>`;
             document.body.appendChild(messageDiv);
-
-            // Auto-remove after 3 seconds
-            setTimeout(() => {
-                messageDiv.remove();
-            }, 3000);
+            $(messageDiv).toast({ delay: 3000 }).toast('show').on('hidden.bs.toast', () => messageDiv.remove());
         }
     </script>
 </x-app-layout>
