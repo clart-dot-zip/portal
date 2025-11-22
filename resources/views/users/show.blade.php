@@ -243,11 +243,8 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="text-lg font-medium text-gray-900">Privileged Identity Management</h3>
-                                <p class="text-sm text-gray-600">Grant time-bound elevated roles on the dedicated server. Actions are fully audited.</p>
+                                <p class="text-sm text-gray-600">Grant time-bound access to sensitive portal actions. Every activation is logged for auditability.</p>
                             </div>
-                            @if($localUser && $localUser->server_username)
-                                <span class="text-sm text-gray-500">Server account: <span class="font-mono text-gray-800">{{ $localUser->server_username }}</span></span>
-                            @endif
                         </div>
 
                         @if(!$pimEnabled)
@@ -256,49 +253,56 @@
                             </div>
                         @elseif(!$localUser)
                             <div class="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded">
-                                Sync this user locally before activating roles.
-                            </div>
-                        @elseif(!$pimOperational)
-                            <div class="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded space-y-2">
-                                <p>PIM server connectivity is incomplete. Configure the SSH details via environment variables:</p>
-                                <ul class="list-disc list-inside text-sm">
-                                    <li><code>PIM_SERVER_HOST</code></li>
-                                    <li><code>PIM_SERVER_USER</code></li>
-                                    <li><code>PIM_SERVER_IDENTITY_FILE</code> or equivalent authentication</li>
-                                </ul>
-                            </div>
-                        @elseif($serverUsernameMissing)
-                            <div class="bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded">
-                                Provide the server username on the <a href="{{ route('users.edit', $authentikUser['pk']) }}" class="underline font-medium">Edit User</a> page before requesting privileged access.
+                                Sync this user locally before activating PIM groups.
                             </div>
                         @else
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                                @forelse($pimRoles as $role)
-                                    @php $activation = $role['active_activation']; @endphp
-                                    <div class="border border-gray-200 rounded-lg p-5 flex flex-col justify-between">
-                                        <div>
-                                            <div class="flex items-center justify-between mb-2">
-                                                <h4 class="text-base font-semibold text-gray-900">{{ $role['label'] }}</h4>
-                                                @if($activation)
-                                                    <span class="px-2 inline-flex text-xs font-semibold rounded-full bg-green-100 text-green-700">Active</span>
-                                                @else
-                                                    <span class="px-2 inline-flex text-xs font-semibold rounded-full bg-gray-100 text-gray-600">Available</span>
-                                                @endif
+                            @php
+                                $assignedGroupIds = $pimGroups->pluck('id')->all();
+                            @endphp
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                                <div class="lg:col-span-2 space-y-4">
+                                    <h4 class="text-base font-semibold text-gray-900">Assigned PIM Groups</h4>
+                                    @forelse($pimGroups as $groupData)
+                                        @php
+                                            $group = $groupData['group'];
+                                            $activation = $groupData['active_activation'];
+                                            $permissions = $groupData['permissions'];
+                                        @endphp
+                                        <div class="border border-gray-200 rounded-lg p-5 space-y-4">
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <h5 class="text-base font-semibold text-gray-900">{{ $group->name }}</h5>
+                                                    <p class="text-sm text-gray-600">{{ $group->description ?? 'No description provided.' }}</p>
+                                                    <p class="mt-2 text-xs text-gray-500">Duration window: {{ $groupData['minimum_duration_minutes'] }}-{{ $groupData['max_duration_minutes'] }} minutes (default {{ $groupData['default_duration_minutes'] }} minutes)</p>
+                                                </div>
+                                                <span class="px-2 inline-flex text-xs font-semibold rounded-full {{ $activation ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600' }}">
+                                                    {{ $activation ? 'Active' : 'Available' }}
+                                                </span>
                                             </div>
-                                            <p class="text-sm text-gray-600">{{ $role['description'] }}</p>
-                                            <div class="mt-3 text-xs text-gray-500 space-y-1">
-                                                <p>Group: <span class="font-mono text-gray-800">{{ $role['group'] }}</span></p>
-                                                <p>Duration window: {{ $role['minimum_duration_minutes'] }}-{{ $role['max_duration_minutes'] }} minutes</p>
+                                            <div>
+                                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Permissions</p>
+                                                <div class="flex flex-wrap gap-2">
+                                                    @forelse($permissions as $permission)
+                                                        <span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">{{ $permission->label ?? \Illuminate\Support\Str::headline($permission->key) }}</span>
+                                                    @empty
+                                                        <span class="text-xs text-gray-500">No permissions linked.</span>
+                                                    @endforelse
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        @if($activation)
-                                            <div class="mt-4 space-y-3">
+                                            <div class="flex flex-wrap gap-3">
+                                                <form method="POST" action="{{ route('users.pim.groups.remove', ['id' => $authentikUser['pk'], 'group' => $group->id]) }}" onsubmit="return confirm('Remove this group assignment?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-sm text-red-600 hover:text-red-800 font-medium">Remove Group</button>
+                                                </form>
+                                            </div>
+
+                                            @if($activation)
                                                 <div class="bg-green-50 border border-green-200 rounded p-3 text-sm text-green-800 space-y-1">
                                                     <p><strong>Reason:</strong> {{ $activation->reason }}</p>
                                                     <p><strong>Activated:</strong> {{ $activation->activated_at?->format('M j, Y g:i A') }} ({{ $activation->activated_at?->diffForHumans() }})</p>
                                                     <p><strong>Expires:</strong> {{ $activation->expires_at?->format('M j, Y g:i A') }} ({{ $activation->expires_at?->diffForHumans() }})</p>
-                                                    <p><strong>Server account at activation:</strong> {{ $activation->server_username_snapshot }}</p>
                                                 </div>
                                                 <form method="POST" action="{{ route('users.pim.deactivate', ['id' => $authentikUser['pk'], 'activation' => $activation->id]) }}" class="space-y-3">
                                                     @csrf
@@ -313,53 +317,66 @@
                                                         Revoke Access
                                                     </button>
                                                 </form>
+                                            @else
+                                                <form method="POST" action="{{ route('users.pim.activate', ['id' => $authentikUser['pk']]) }}" class="space-y-4">
+                                                    @csrf
+                                                    <input type="hidden" name="pim_group_id" value="{{ $group->id }}">
+                                                    <div>
+                                                        <label for="duration_group_{{ $group->id }}" class="block text-sm font-medium text-gray-700">Duration (minutes)</label>
+                                                        <input type="number"
+                                                            name="duration_minutes"
+                                                            id="duration_group_{{ $group->id }}"
+                                                            min="{{ $groupData['minimum_duration_minutes'] }}"
+                                                            max="{{ $groupData['max_duration_minutes'] }}"
+                                                            value="{{ $groupData['default_duration_minutes'] }}"
+                                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                                            required>
+                                                        <p class="mt-1 text-xs text-gray-500">Allowed range: {{ $groupData['minimum_duration_minutes'] }} to {{ $groupData['max_duration_minutes'] }} minutes.</p>
+                                                    </div>
+                                                    <div>
+                                                        <label for="reason_group_{{ $group->id }}" class="block text-sm font-medium text-gray-700">Reason</label>
+                                                        <textarea name="reason" id="reason_group_{{ $group->id }}" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" required placeholder="Explain why elevated access is required."></textarea>
+                                                    </div>
+                                                    <div class="flex justify-end">
+                                                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center">
+                                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                            </svg>
+                                                            Activate Access
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    @empty
+                                        <div class="bg-gray-50 border border-dashed border-gray-200 rounded-lg p-6 text-center text-sm text-gray-500">
+                                            No PIM groups are assigned to this user yet.
+                                        </div>
+                                    @endforelse
+                                </div>
+                                <div class="space-y-4">
+                                    <h4 class="text-base font-semibold text-gray-900">Assign New Group</h4>
+                                    @php
+                                        $availableOptions = $availablePimGroups->filter(fn ($group) => !in_array($group->id, $assignedGroupIds));
+                                    @endphp
+                                    @if($availableOptions->isEmpty())
+                                        <p class="text-sm text-gray-500">All configured PIM groups are already assigned.</p>
+                                    @else
+                                        <form method="POST" action="{{ route('users.pim.groups.assign', ['id' => $authentikUser['pk']]) }}" class="space-y-4">
+                                            @csrf
+                                            <div>
+                                                <label for="pim_group_select" class="block text-sm font-medium text-gray-700">Group</label>
+                                                <select id="pim_group_select" name="pim_group_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" required>
+                                                    <option value="">Select a group</option>
+                                                    @foreach($availableOptions as $groupOption)
+                                                        <option value="{{ $groupOption->id }}">{{ $groupOption->name }}</option>
+                                                    @endforeach
+                                                </select>
                                             </div>
-                                        @else
-                                            <div class="mt-4">
-                                                <button type="button"
-                                                        class="activate-role-btn bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors duration-200"
-                                                        data-role="{{ $role['key'] }}">
-                                                    Activate Access
-                                                </button>
-                                                <div id="activate-form-{{ $role['key'] }}" class="activate-form mt-4 hidden">
-                                                    <form method="POST" action="{{ route('users.pim.activate', ['id' => $authentikUser['pk']]) }}" class="space-y-4">
-                                                        @csrf
-                                                        <input type="hidden" name="role" value="{{ $role['key'] }}">
-                                                        <div>
-                                                            <label for="duration_{{ $role['key'] }}" class="block text-sm font-medium text-gray-700">Duration (minutes)</label>
-                                                            <input type="number"
-                                                                   name="duration_minutes"
-                                                                   id="duration_{{ $role['key'] }}"
-                                                                   min="{{ $role['minimum_duration_minutes'] }}"
-                                                                   max="{{ $role['max_duration_minutes'] }}"
-                                                                   value="{{ $role['default_duration_minutes'] }}"
-                                                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                                                                   required>
-                                                            <p class="mt-1 text-xs text-gray-500">Allowed range: {{ $role['minimum_duration_minutes'] }} to {{ $role['max_duration_minutes'] }} minutes.</p>
-                                                        </div>
-                                                        <div>
-                                                            <label for="reason_{{ $role['key'] }}" class="block text-sm font-medium text-gray-700">Reason</label>
-                                                            <textarea name="reason" id="reason_{{ $role['key'] }}" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" required placeholder="Explain why elevated access is required."></textarea>
-                                                        </div>
-                                                        <div class="flex justify-end gap-3">
-                                                            <button type="button" class="cancel-activate text-sm text-gray-600 hover:text-gray-800 px-3 py-2">Cancel</button>
-                                                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center">
-                                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                                </svg>
-                                                                Submit Request
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        @endif
-                                    </div>
-                                @empty
-                                    <div class="col-span-full bg-gray-50 border border-dashed border-gray-200 rounded-lg p-6 text-center text-sm text-gray-500">
-                                        No privileged roles are configured.
-                                    </div>
-                                @endforelse
+                                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors duration-200">Assign Group</button>
+                                        </form>
+                                    @endif
+                                </div>
                             </div>
                         @endif
 
@@ -370,7 +387,7 @@
                                     <table class="min-w-full divide-y divide-gray-200">
                                         <thead class="bg-gray-50">
                                             <tr>
-                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Group</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Activated</th>
@@ -382,7 +399,7 @@
                                         <tbody class="bg-white divide-y divide-gray-200">
                                             @foreach($pimActivations as $activation)
                                                 <tr>
-                                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{{ ucfirst($activation->role) }}</td>
+                                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{{ $activation->pimGroup?->name ?? '—' }}</td>
                                                     <td class="px-4 py-2 whitespace-nowrap">
                                                         @php
                                                             $statusClasses = [
@@ -397,7 +414,12 @@
                                                             {{ ucfirst($activation->status) }}
                                                         </span>
                                                     </td>
-                                                    <td class="px-4 py-2 text-sm text-gray-600 max-w-xs">{{ $activation->reason }}</td>
+                                                    <td class="px-4 py-2 text-sm text-gray-600 max-w-xs">
+                                                        <div>{{ $activation->reason }}</div>
+                                                        @if($activation->deactivation_reason)
+                                                            <div class="text-xs text-gray-500 mt-1">{{ $activation->deactivation_reason }}</div>
+                                                        @endif
+                                                    </td>
                                                     <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{{ $activation->activated_at?->format('M j, Y g:i A') }}</td>
                                                     <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{{ $activation->expires_at?->format('M j, Y g:i A') }}</td>
                                                     <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
@@ -445,31 +467,6 @@
                     sendPasswordRecovery(userId, username, email);
                 });
             }
-
-            document.querySelectorAll('.activate-role-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const role = this.dataset.role;
-                    const target = document.getElementById(`activate-form-${role}`);
-                    if (target) {
-                        target.classList.toggle('hidden');
-                        if (!target.classList.contains('hidden')) {
-                            const textarea = target.querySelector('textarea[name="reason"]');
-                            if (textarea) {
-                                textarea.focus();
-                            }
-                        }
-                    }
-                });
-            });
-
-            document.querySelectorAll('.activate-form .cancel-activate').forEach(button => {
-                button.addEventListener('click', function() {
-                    const container = this.closest('.activate-form');
-                    if (container) {
-                        container.classList.add('hidden');
-                    }
-                });
-            });
 
             function deleteUser(userId, username) {
                 if (!confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {

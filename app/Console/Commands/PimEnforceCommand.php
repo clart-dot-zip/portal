@@ -18,11 +18,6 @@ class PimEnforceCommand extends Command
             return self::SUCCESS;
         }
 
-        if (!$pimService->isOperational()) {
-            $this->warn('PIM server is not fully configured; skipping enforcement.');
-            return self::SUCCESS;
-        }
-
         $pimService->enforceExpirations();
         $this->info('Checked for expired PIM activations.');
 

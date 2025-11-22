@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth' => RedirectIfUnauthenticated::class,
             'portal.admin' => CheckPortalAdmin::class,
+            'pim.permission' => \App\Http\Middleware\EnsurePimPermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

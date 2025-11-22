@@ -3,27 +3,85 @@
 return [
     'enabled' => env('PIM_ENABLED', true),
 
-    'dry_run' => env('PIM_DRY_RUN', false),
-
-    'server' => [
-        'host' => env('PIM_SERVER_HOST'),
-        'port' => env('PIM_SERVER_PORT', 22),
-        'user' => env('PIM_SERVER_USER'),
-        'identity_file' => env('PIM_SERVER_IDENTITY_FILE'),
-        'ssh_binary' => env('PIM_SSH_BINARY', 'ssh'),
-        'additional_options' => env('PIM_SSH_OPTIONS'),
-        'known_hosts_file' => env('PIM_KNOWN_HOSTS_FILE'),
-        'use_sudo' => env('PIM_USE_SUDO', true),
+    'permissions' => [
+        'dashboard.view' => [
+            'label' => 'View Dashboard',
+            'description' => 'Access administrative dashboards and widgets.',
+        ],
+        'dashboard.update' => [
+            'label' => 'Update Dashboard Widgets',
+            'description' => 'Modify dashboard panels, tiles, or data sources.',
+        ],
+        'applications.view' => [
+            'label' => 'View Applications',
+            'description' => 'Read application metadata and assignments.',
+        ],
+        'applications.update' => [
+            'label' => 'Update Applications',
+            'description' => 'Modify application configuration or access rules.',
+        ],
+        'applications.delete' => [
+            'label' => 'Delete Applications',
+            'description' => 'Remove application entries from the portal.',
+        ],
+        'applications.sync' => [
+            'label' => 'Sync Applications',
+            'description' => 'Initiate an Authentik sync for applications.',
+        ],
+        'users.view' => [
+            'label' => 'View Users',
+            'description' => 'Read user profiles and Authentik metadata.',
+        ],
+        'users.update' => [
+            'label' => 'Update Users',
+            'description' => 'Edit user attributes and related metadata.',
+        ],
+        'users.delete' => [
+            'label' => 'Delete Users',
+            'description' => 'Remove portal users or revoke access.',
+        ],
+        'users.sync' => [
+            'label' => 'Sync Users',
+            'description' => 'Trigger Authentik user sync operations.',
+        ],
+        'groups.view' => [
+            'label' => 'View Groups',
+            'description' => 'Read group membership and hierarchy.',
+        ],
+        'groups.update' => [
+            'label' => 'Update Groups',
+            'description' => 'Modify group metadata or membership.',
+        ],
+        'groups.delete' => [
+            'label' => 'Delete Groups',
+            'description' => 'Remove portal groups.',
+        ],
+        'git.view' => [
+            'label' => 'View Git Management',
+            'description' => 'Access Git-managed server data and history.',
+        ],
+        'git.manage' => [
+            'label' => 'Manage Git Servers',
+            'description' => 'Run git commands and update managed server metadata.',
+        ],
+        'pim.manage' => [
+            'label' => 'Manage PIM',
+            'description' => 'Create groups, assign permissions, and audit activations.',
+        ],
+        'pim.activate' => [
+            'label' => 'Activate PIM Groups',
+            'description' => 'Approve or revoke PIM activations for users.',
+        ],
     ],
 
-    'roles' => [
-        'root' => [
-            'label' => 'Root',
-            'description' => 'Temporary root access on the dedicated server.',
-            'group' => env('PIM_ROOT_GROUP', 'root'),
-            'max_duration_minutes' => env('PIM_ROOT_MAX_DURATION', 60),
-            'default_duration_minutes' => env('PIM_ROOT_DEFAULT_DURATION', 15),
-            'minimum_duration_minutes' => env('PIM_ROOT_MIN_DURATION', 5),
+    'default_groups' => [
+        'git-management-operators' => [
+            'name' => 'Git Management Operators',
+            'description' => 'Temporary access to run git commands through the portal.',
+            'permissions' => ['git.view', 'git.manage'],
+            'min_duration_minutes' => (int) env('PIM_GIT_MIN_DURATION', 5),
+            'max_duration_minutes' => (int) env('PIM_GIT_MAX_DURATION', 60),
+            'default_duration_minutes' => (int) env('PIM_GIT_DEFAULT_DURATION', 15),
         ],
     ],
 ];

@@ -51,6 +51,9 @@ Route::middleware(['auth', 'portal.admin:true'])->group(function () {
     // PIM Dashboard Routes - Admin access required
     Route::prefix('pim')->name('pim.')->group(function () {
         Route::get('/', [PimController::class, 'index'])->name('index');
+        Route::post('/groups', [PimController::class, 'storeGroup'])->name('groups.store');
+        Route::put('/groups/{group}', [PimController::class, 'updateGroup'])->name('groups.update');
+        Route::delete('/groups/{group}', [PimController::class, 'destroyGroup'])->name('groups.destroy');
     });
     
     
@@ -72,6 +75,9 @@ Route::middleware(['auth', 'portal.admin:true'])->group(function () {
             Route::post('/activations/{activation}/deactivate', [PimController::class, 'deactivate'])
                 ->whereNumber('activation')
                 ->name('deactivate');
+            Route::post('/groups', [PimController::class, 'assignGroup'])->name('groups.assign');
+            Route::delete('/groups/{group}', [PimController::class, 'removeGroup'])
+                ->name('groups.remove');
         });
     });
     

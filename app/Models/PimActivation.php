@@ -12,7 +12,7 @@ class PimActivation extends Model
 
     protected $fillable = [
         'user_id',
-        'role',
+        'pim_group_id',
         'duration_minutes',
         'activated_at',
         'expires_at',
@@ -22,7 +22,6 @@ class PimActivation extends Model
         'reason',
         'deactivation_reason',
         'status_message',
-        'server_username_snapshot',
     ];
 
     protected $casts = [
@@ -40,6 +39,11 @@ class PimActivation extends Model
     public function initiatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'initiated_by');
+    }
+
+    public function pimGroup(): BelongsTo
+    {
+        return $this->belongsTo(PimGroup::class);
     }
 
     public function isActive(): bool

@@ -125,14 +125,9 @@ MAIL_FROM_ADDRESS=noreply@your-domain.com
 
 # Privileged Identity Management (PIM)
 PIM_ENABLED=true
-PIM_SERVER_HOST=your.dedicated.server
-PIM_SERVER_USER=ssh_service_account
-PIM_SERVER_IDENTITY_FILE=/path/to/private/key
-PIM_ROOT_GROUP=root
-PIM_ROOT_MAX_DURATION=60
-PIM_ROOT_DEFAULT_DURATION=15
-PIM_USE_SUDO=true
-PIM_DRY_RUN=false
+PIM_GIT_MIN_DURATION=5
+PIM_GIT_DEFAULT_DURATION=15
+PIM_GIT_MAX_DURATION=60
 ```
 
 ### 5. Database Setup
@@ -212,24 +207,26 @@ To configure access:
 
 ### Privileged Identity Management (PIM)
 
-The PIM module enables just-in-time elevation to privileged roles (e.g., temporary `root` access) on your dedicated Linux server.
+The refreshed PIM module grants time-bound access to sensitive **portal** features (Git management, application changes, user edits, etc.) instead of issuing root access on a target server.
 
 Key capabilities:
 
-- **Server Username Mapping** – each portal user stores a corresponding Linux username.
-- **Role Catalogue** – administrators can activate predefined roles (currently `root`).
-- **Reason & Duration Capture** – activations require a justification and expiry window.
-- **Automated Revocation** – a scheduled task (`php artisan pim:enforce`) removes expired privileges.
-- **Audit History** – every activation/deactivation is recorded with initiator and timestamps.
+- **PIM Groups** – define reusable group records (name, description, duration window, optional auto-approval).
+- **Permission Catalog** – assign one or more portal permissions (e.g., `git.manage`, `applications.update`, `users.delete`) to each group.
+- **User Assignment** – map PIM groups to portal users; only assigned groups can be activated for that user.
+- **Activation Workflow** – admins capture a reason, duration, and initiator for every activation; activations expire automatically.
+- **Audit History** – every activation/deactivation is logged with timestamps, initiator, and resulting status.
 
 Configuration notes:
 
-1. Populate the PIM environment variables (see above) so the portal can reach your server over SSH.
-2. Ensure the SSH account can run `usermod`/`gpasswd` (either as root or via `sudo`).
-3. Schedule the enforcement command if you rely on systemd/cron (Laravel's scheduler already runs it every five minutes via `routes/console.php`).
-4. For non-production testing, set `PIM_DRY_RUN=true` to bypass real SSH execution while verifying UI flows.
+1. Update `config/pim.php` if you need to seed additional permissions or default groups.
+2. Schedule the enforcement command if you rely on systemd/cron (Laravel's scheduler already runs `php artisan pim:enforce` every five minutes via `routes/console.php`).
+3. For non-production testing you can disable PIM entirely via `PIM_ENABLED=false`.
 
-Once configured, administrators will see a new **PIM** tab on the user detail page where they can grant or revoke time-bound access.
+Once configured, administrators will see:
+
+- A **PIM** tab on the user detail page to assign groups and activate/deactivate access.
+- A dedicated **PIM** dashboard to create/update/delete groups, review permission assignments, and audit activations.
 
 ## 📖 Usage
 

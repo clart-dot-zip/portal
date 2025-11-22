@@ -8,7 +8,7 @@
                     {{ __('Privileged Identity Management') }}
                 </h2>
                 <p class="mt-1 text-sm text-gray-600">
-                    Monitor and control just-in-time privileged access across linked server accounts.
+                    Monitor and control just-in-time access to sensitive portal features and workflows.
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
@@ -42,10 +42,6 @@
                 <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
                     Privileged access is currently disabled. Update the PIM environment variables to enable activations.
                 </div>
-            @elseif(!$pimOperational)
-                <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
-                    Server connectivity is incomplete. Validate SSH credentials, sudo configuration, and identity files before issuing new activations.
-                </div>
             @endif
 
             @php
@@ -75,28 +71,124 @@
 
             <div class="bg-white shadow-sm sm:rounded-lg">
                 <div class="p-6 border-b border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900">Available Roles</h3>
-                    <p class="text-sm text-gray-500 mt-1">Reference for the roles that can be elevated along with their guardrails.</p>
+                    <h3 class="text-lg font-medium text-gray-900">PIM Groups &amp; Permissions</h3>
+                    <p class="text-sm text-gray-500 mt-1">Define the groups that can be activated, along with their duration limits and portal permissions.</p>
                 </div>
-                <div class="divide-y divide-gray-100">
-                    @forelse($roleCatalog as $role)
-                        <div class="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="p-6 space-y-8">
+                    <div>
+                        <h4 class="text-base font-semibold text-gray-900 mb-3">Create a New Group</h4>
+                        <form method="POST" action="{{ route('pim.groups.store') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            @csrf
                             <div>
-                                <div class="text-md font-semibold text-gray-900">{{ $role['label'] ?? ucfirst($role['key']) }}</div>
-                                <div class="text-sm text-gray-500 mt-1">{{ $role['description'] ?? 'No description provided.' }}</div>
-                                <div class="mt-2 text-sm text-gray-500">
-                                    Target group: <span class="font-medium text-gray-700">{{ $role['group'] ?? 'Not configured' }}</span>
+                                <label for="group_name" class="block text-sm font-medium text-gray-700">Name</label>
+                                <input type="text" id="group_name" name="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                            </div>
+                            <div>
+                                <label for="group_slug" class="block text-sm font-medium text-gray-700">Slug (optional)</label>
+                                <input type="text" id="group_slug" name="slug" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="e.g., git-management">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label for="group_description" class="block text-sm font-medium text-gray-700">Description</label>
+                                <textarea id="group_description" name="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                            </div>
+                            <div>
+                                <label for="group_min_duration" class="block text-sm font-medium text-gray-700">Minimum Duration (minutes)</label>
+                                <input type="number" id="group_min_duration" name="min_duration_minutes" value="5" min="1" max="1440" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                            </div>
+                            <div>
+                                <label for="group_default_duration" class="block text-sm font-medium text-gray-700">Default Duration (minutes)</label>
+                                <input type="number" id="group_default_duration" name="default_duration_minutes" value="15" min="1" max="1440" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                            </div>
+                            <div>
+                                <label for="group_max_duration" class="block text-sm font-medium text-gray-700">Maximum Duration (minutes)</label>
+                                <input type="number" id="group_max_duration" name="max_duration_minutes" value="60" min="1" max="1440" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label for="group_permissions" class="block text-sm font-medium text-gray-700">Permissions</label>
+                                <select id="group_permissions" name="permissions[]" multiple class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 h-40">
+                                    @foreach($permissions as $permission)
+                                        <option value="{{ $permission->id }}">{{ $permission->label ?? \Illuminate\Support\Str::headline($permission->key) }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Hold Ctrl (Windows) or Command (macOS) to select multiple permissions.</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input id="group_auto_approve" name="auto_approve" type="checkbox" value="1" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <label for="group_auto_approve" class="text-sm text-gray-700">Auto-approve activations for this group</label>
+                            </div>
+                            <div class="md:col-span-2 flex justify-end">
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200">Create Group</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div>
+                        <h4 class="text-base font-semibold text-gray-900 mb-3">Existing Groups</h4>
+                        @forelse($groups as $group)
+                            <details class="border border-gray-200 rounded-lg mb-4" @if($loop->first) open @endif>
+                                <summary class="px-4 py-3 cursor-pointer flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">{{ $group->name }}</p>
+                                        <p class="text-xs text-gray-500">{{ $group->permissions->count() }} permissions · Default {{ $group->default_duration_minutes }} min</p>
+                                    </div>
+                                    <span class="text-xs font-semibold text-gray-500">Edit</span>
+                                </summary>
+                                <div class="px-4 pb-4 pt-2 space-y-4">
+                                    <form method="POST" action="{{ route('pim.groups.update', $group) }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        @csrf
+                                        @method('PUT')
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Name</label>
+                                            <input type="text" name="name" value="{{ $group->name }}" class="mt-1 block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Slug</label>
+                                            <input type="text" name="slug" value="{{ $group->slug }}" class="mt-1 block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700">Description</label>
+                                            <textarea name="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">{{ $group->description }}</textarea>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Min Duration</label>
+                                            <input type="number" name="min_duration_minutes" value="{{ $group->min_duration_minutes }}" class="mt-1 block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Default Duration</label>
+                                            <input type="number" name="default_duration_minutes" value="{{ $group->default_duration_minutes }}" class="mt-1 block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Max Duration</label>
+                                            <input type="number" name="max_duration_minutes" value="{{ $group->max_duration_minutes }}" class="mt-1 block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500" required>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700">Permissions</label>
+                                            <select name="permissions[]" multiple class="mt-1 block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 h-32">
+                                                @foreach($permissions as $permission)
+                                                    <option value="{{ $permission->id }}" @if($group->permissions->contains('id', $permission->id)) selected @endif>
+                                                        {{ $permission->label ?? \Illuminate\Support\Str::headline($permission->key) }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <input type="checkbox" name="auto_approve" value="1" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" @checked($group->auto_approve)>
+                                            <span class="text-sm text-gray-700">Auto-approve activations</span>
+                                        </div>
+                                        <div class="md:col-span-2 flex justify-end gap-3">
+                                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md">Save Changes</button>
+                                        </div>
+                                    </form>
+                                    <form method="POST" action="{{ route('pim.groups.destroy', $group) }}" onsubmit="return confirm('Delete this group? Activations referencing it will be removed.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-sm text-red-600 hover:text-red-800 font-medium">Delete Group</button>
+                                    </form>
                                 </div>
-                            </div>
-                            <div class="flex flex-wrap gap-3 text-sm text-gray-600">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100">Default {{ (int) ($role['default_duration_minutes'] ?? 15) }} min</span>
-                                <span class="inline-flex items-center px-3 py-1 rounded-full bg-green-100">Max {{ (int) ($role['max_duration_minutes'] ?? 60) }} min</span>
-                                <span class="inline-flex items-center px-3 py-1 rounded-full bg-blue-100">Min {{ (int) ($role['minimum_duration_minutes'] ?? 5) }} min</span>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="p-6 text-sm text-gray-500">No PIM roles are configured. Update <code>config/pim.php</code> to add role definitions.</div>
-                    @endforelse
+                            </details>
+                        @empty
+                            <p class="text-sm text-gray-500">No PIM groups are configured yet.</p>
+                        @endforelse
+                    </div>
                 </div>
             </div>
 
@@ -109,7 +201,7 @@
                     <form method="GET" action="{{ route('pim.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div class="md:col-span-3">
                             <label for="search" class="block text-sm font-medium text-gray-700">Search</label>
-                            <input id="search" name="search" type="text" value="{{ $search }}" placeholder="Search by user, server username, role, or reason" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <input id="search" name="search" type="text" value="{{ $search }}" placeholder="Search by user, group, or reason" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         <div>
                             <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
@@ -145,8 +237,7 @@
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">User</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Server Username</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Role</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Group</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Reason</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Window</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Actions</th>
@@ -161,7 +252,6 @@
                                             }
                                             $badgeClass = $statusColors[$statusKey] ?? 'bg-gray-100 text-gray-700';
                                             $user = $activation->user;
-                                            $roleDefinition = $roleCatalog->get($activation->role);
                                         @endphp
                                         <tr class="hover:bg-gray-50">
                                             <td class="px-6 py-4 whitespace-nowrap">
@@ -178,10 +268,7 @@
                                                 @endif
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {{ $activation->server_username_snapshot ?? ($user->server_username ?? '-') }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                <div class="font-medium text-gray-900">{{ $roleDefinition['label'] ?? ucfirst($activation->role) }}</div>
+                                                <div class="font-medium text-gray-900">{{ $activation->pimGroup?->name ?? 'Unknown Group' }}</div>
                                                 <div class="text-xs text-gray-500">Duration {{ $activation->duration_minutes }} min</div>
                                             </td>
                                             <td class="px-6 py-4 text-sm text-gray-700 max-w-xs">

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Services\Authentik\AuthentikSDK;
 use App\Services\Pim\PimService;
 use App\Models\User;
+use App\Models\PimGroup;
 use App\Mail\WelcomeEmail;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -211,14 +212,14 @@ class UserController extends Controller
 
             $pimEnabled = $this->pimService->isEnabled();
             $pimOperational = $this->pimService->isOperational();
-            $pimRoles = collect();
+            $pimGroups = collect();
             $pimActivations = collect();
-            $serverUsernameMissing = $localUser && empty($localUser->server_username);
+            $availablePimGroups = PimGroup::with('permissions')->orderBy('name')->get();
 
             if ($localUser) {
-                $pimRoles = $this->pimService->rolesForUser($localUser);
+                $pimGroups = $this->pimService->groupsForUser($localUser);
                 $pimActivations = $localUser->pimActivations()
-                    ->with('initiatedBy')
+                    ->with(['initiatedBy', 'pimGroup'])
                     ->latest('activated_at')
                     ->limit(10)
                     ->get();
@@ -230,9 +231,9 @@ class UserController extends Controller
                 'groups',
                 'pimEnabled',
                 'pimOperational',
-                'pimRoles',
+                'pimGroups',
                 'pimActivations',
-                'serverUsernameMissing'
+                'availablePimGroups'
             ));
             
         } catch (\Exception $e) {

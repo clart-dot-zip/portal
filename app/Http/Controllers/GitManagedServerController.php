@@ -15,7 +15,7 @@ class GitManagedServerController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'portal.admin:true']);
+        $this->middleware(['auth', 'portal.admin:true', 'pim.permission:git.manage']);
     }
 
     public function create(Request $request, PterodactylClient $client)

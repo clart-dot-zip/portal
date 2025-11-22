@@ -7,7 +7,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Collection;
 use App\Models\PimActivation;
+use App\Models\PimGroup;
+use App\Models\PimPermission;
 
 class User extends Authenticatable
 {
@@ -47,5 +51,28 @@ class User extends Authenticatable
     public function pimActivations(): HasMany
     {
         return $this->hasMany(PimActivation::class);
+    }
+
+    public function pimGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(PimGroup::class, 'pim_group_user')->withTimestamps();
+    }
+
+    public function activePimPermissions(): Collection
+    {
+        return PimPermission::query()
+            ->whereHas('groups.activations', function ($query) {
+                $query->where('user_id', $this->id)
+                    ->where('status', 'active')
+                    ->whereNull('deactivated_at');
+            })
+            ->pluck('key')
+            ->unique()
+            ->values();
+    }
+
+    public function hasActivePimPermission(string $permissionKey): bool
+    {
+        return $this->activePimPermissions()->contains($permissionKey);
     }
 }
