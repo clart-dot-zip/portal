@@ -13,6 +13,11 @@ use Throwable;
 
 class GitManagedServerController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'portal.admin:true']);
+    }
+
     public function create(Request $request, PterodactylClient $client)
     {
         try {

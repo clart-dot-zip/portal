@@ -1,3 +1,7 @@
+@php
+    $isPortalAdmin = request()->attributes->get('isPortalAdmin', view()->shared('isPortalAdmin', false));
+@endphp
+
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -15,7 +19,7 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" onclick="showNavigationLoading(event)">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    @if(view()->shared('isPortalAdmin', false))
+                    @if($isPortalAdmin)
                         <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')" onclick="showNavigationLoading(event)">
                             {{ __('Users') }}
                         </x-nav-link>
@@ -85,7 +89,7 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" onclick="showNavigationLoading(event)">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            @if(view()->shared('isPortalAdmin', false))
+            @if($isPortalAdmin)
                 <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')" onclick="showNavigationLoading(event)">
                     {{ __('Users') }}
                 </x-responsive-nav-link>

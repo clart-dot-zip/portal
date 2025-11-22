@@ -13,6 +13,11 @@ use Throwable;
 
 class GitManagementController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'portal.admin:true']);
+    }
+
     public function index(GitCommandExecutor $executor)
     {
         $servers = GitManagedServer::with(['logs' => function ($query) {
