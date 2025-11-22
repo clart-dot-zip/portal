@@ -40,7 +40,7 @@
                             @endif
                             <p class="text-sm text-gray-500">Default remote: <span class="font-mono">{{ $server->remote_name ?? $defaults['remote'] }}</span> · Default branch: <span class="font-mono">{{ $server->default_branch ?? $defaults['branch'] }}</span></p>
                             <p class="text-sm text-gray-500">Current branch: <span class="font-mono">{{ $server->current_branch ?? 'Unknown' }}</span>@if ($server->branch_cache_timestamp) <span class="text-xs text-gray-400"> (cached {{ \Carbon\Carbon::parse($server->branch_cache_timestamp)->diffForHumans() }})</span>@endif</p>
-                            <p class="text-sm text-gray-500">SSH target: <span class="font-mono">{{ sprintf('%s@%s:%s', $server->ssh_username ?? $defaults['ssh_user'], $server->ssh_host ?? 'localhost', $server->ssh_port ?? $defaults['ssh_port']) }}</span></p>
+                            <!--<p class="text-sm text-gray-500">SSH target: <span class="font-mono">{{ sprintf('%s@%s:%s', $server->ssh_username ?? $defaults['ssh_user'], $server->ssh_host ?? 'localhost', $server->ssh_port ?? $defaults['ssh_port']) }}</span></p>-->
                         </div>
                         <div class="flex items-center space-x-3">
                             <form method="POST" action="{{ route('git-management.destroy', $server) }}" onsubmit="return confirm('Remove this server from Git Management?');">
