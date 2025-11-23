@@ -19,6 +19,11 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" onclick="showNavigationLoading(event)">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    @auth
+                        <x-nav-link :href="route('pim.activation.index')" :active="request()->routeIs('pim.activation.*')" onclick="showNavigationLoading(event)">
+                            {{ __('PIM Activation') }}
+                        </x-nav-link>
+                    @endauth
                     @if($isPortalAdmin)
                         <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')" onclick="showNavigationLoading(event)">
                             {{ __('Users') }}
@@ -89,6 +94,11 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" onclick="showNavigationLoading(event)">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            @auth
+                <x-responsive-nav-link :href="route('pim.activation.index')" :active="request()->routeIs('pim.activation.*')" onclick="showNavigationLoading(event)">
+                    {{ __('PIM Activation') }}
+                </x-responsive-nav-link>
+            @endauth
             @if($isPortalAdmin)
                 <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')" onclick="showNavigationLoading(event)">
                     {{ __('Users') }}

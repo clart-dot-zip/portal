@@ -8,6 +8,7 @@ use App\Http\Controllers\GroupController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PimController;
+use App\Http\Controllers\PimActivationController;
 use App\Http\Controllers\GitManagementController;
 use App\Http\Controllers\GitManagedServerController;
 use Laravel\Socialite\Facades\Socialite;
@@ -44,6 +45,12 @@ Route::middleware('auth')->group(function () {
     // User Profile Routes - Available to all authenticated users
     Route::get('/profile', [UserController::class, 'profile'])->middleware('portal.admin:false')->name('users.profile');
     Route::put('/profile', [UserController::class, 'updateProfile'])->middleware('portal.admin:false')->name('users.profile.update');
+
+    Route::get('/pim/activation', [PimActivationController::class, 'index'])->name('pim.activation.index');
+    Route::post('/pim/activation', [PimActivationController::class, 'store'])->name('pim.activation.store');
+    Route::post('/pim/activation/{activation}/deactivate', [PimActivationController::class, 'deactivate'])
+        ->whereNumber('activation')
+        ->name('pim.activation.deactivate');
 });
 
 // Portal Admin Routes - Require admin access
