@@ -14,7 +14,6 @@ use App\Services\Pim\PimService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class PimController extends Controller
@@ -170,7 +169,7 @@ class PimController extends Controller
     {
         $group = PimGroup::create([
             'name' => $request->string('name')->toString(),
-            'slug' => Str::slug($request->input('slug', $request->string('name')->toString())),
+            'slug' => $request->string('slug')->toString(),
             'description' => $request->input('description'),
             'default_duration_minutes' => (int) $request->integer('default_duration_minutes'),
             'min_duration_minutes' => (int) $request->integer('min_duration_minutes'),
@@ -187,7 +186,7 @@ class PimController extends Controller
     {
         $group->update([
             'name' => $request->string('name')->toString(),
-            'slug' => Str::slug($request->input('slug', $group->slug)),
+            'slug' => $request->string('slug')->toString(),
             'description' => $request->input('description'),
             'default_duration_minutes' => (int) $request->integer('default_duration_minutes'),
             'min_duration_minutes' => (int) $request->integer('min_duration_minutes'),

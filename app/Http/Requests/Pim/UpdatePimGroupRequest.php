@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Pim;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 
 class UpdatePimGroupRequest extends FormRequest
 {
@@ -18,7 +19,7 @@ class UpdatePimGroupRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:150'],
-            'slug' => ['nullable', 'string', 'max:150', 'unique:pim_groups,slug,' . $groupId],
+            'slug' => ['required', 'string', 'max:150', 'unique:pim_groups,slug,' . $groupId],
             'description' => ['nullable', 'string', 'max:1000'],
             'default_duration_minutes' => ['required', 'integer', 'min:1', 'max:1440'],
             'min_duration_minutes' => ['required', 'integer', 'min:1', 'max:1440', 'lte:default_duration_minutes'],
@@ -27,5 +28,20 @@ class UpdatePimGroupRequest extends FormRequest
             'permissions.*' => ['integer', 'exists:pim_permissions,id'],
             'auto_approve' => ['sometimes', 'boolean'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $providedSlug = (string) $this->input('slug', '');
+        $slugSource = trim($providedSlug) !== '' ? $providedSlug : (string) $this->input('name', '');
+        $slug = Str::slug($slugSource);
+
+        if ($slug === '') {
+            $slug = Str::slug('pim-group-' . Str::random(6));
+        }
+
+        $this->merge([
+            'slug' => $slug,
+        ]);
     }
 }

@@ -23,7 +23,7 @@ class EnsurePimPermission
      */
     public function handle(Request $request, Closure $next, string ...$permissions): Response
     {
-        if (!$this->pimService->isEnabled()) {
+        if (!$this->pimService->isEnabled() || !$this->pimService->isOperational()) {
             return $next($request);
         }
 

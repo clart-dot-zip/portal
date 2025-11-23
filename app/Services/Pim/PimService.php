@@ -4,6 +4,7 @@ namespace App\Services\Pim;
 
 use App\Models\PimActivation;
 use App\Models\PimGroup;
+use App\Models\PimPermission;
 use App\Models\User;
 use App\Services\Pim\Exceptions\PimException;
 use Carbon\CarbonImmutable;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Log;
 class PimService
 {
     private bool $enabled;
+
+    private ?bool $operationalCache = null;
 
     public function __construct(array $config)
     {
@@ -27,7 +30,15 @@ class PimService
 
     public function isOperational(): bool
     {
-        return $this->isEnabled();
+        if ($this->operationalCache !== null) {
+            return $this->operationalCache;
+        }
+
+        if (!$this->isEnabled()) {
+            return $this->operationalCache = false;
+        }
+
+        return $this->operationalCache = PimGroup::query()->exists() && PimPermission::query()->exists();
     }
 
     /**

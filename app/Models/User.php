@@ -18,6 +18,8 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    protected ?Collection $cachedActivePimPermissions = null;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -60,7 +62,11 @@ class User extends Authenticatable
 
     public function activePimPermissions(): Collection
     {
-        return PimPermission::query()
+        if ($this->cachedActivePimPermissions !== null) {
+            return $this->cachedActivePimPermissions;
+        }
+
+        return $this->cachedActivePimPermissions = PimPermission::query()
             ->whereHas('groups.activations', function ($query) {
                 $query->where('user_id', $this->id)
                     ->where('status', 'active')

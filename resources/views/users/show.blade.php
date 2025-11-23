@@ -251,6 +251,10 @@
                             <div class="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded">
                                 PIM is disabled. Set <code>PIM_ENABLED=true</code> in your environment to allow privileged activations.
                             </div>
+                        @elseif(!$pimOperational)
+                            <div class="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded">
+                                Configure at least one PIM group with permissions before granting access.
+                            </div>
                         @elseif(!$localUser)
                             <div class="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded">
                                 Sync this user locally before activating PIM groups.

@@ -82,6 +82,8 @@ return new class extends Migration
             if (Schema::hasColumn('pim_activations', 'pim_group_id')) {
                 $table->dropConstrainedForeignId('pim_group_id');
             }
+
+            $table->index(['role', 'status'], 'pim_activations_role_status_index');
         });
 
         Schema::dropIfExists('pim_group_user');
@@ -145,6 +147,7 @@ return new class extends Migration
                     'default_duration_minutes' => $definition['default_duration_minutes'] ?? 15,
                     'min_duration_minutes' => $definition['min_duration_minutes'] ?? 5,
                     'max_duration_minutes' => $definition['max_duration_minutes'] ?? 60,
+                    'auto_approve' => $definition['auto_approve'] ?? false,
                     'updated_at' => $now,
                 ]);
                 $groupId = $existing->id;
