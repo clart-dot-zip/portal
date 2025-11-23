@@ -20,6 +20,8 @@ class User extends Authenticatable
 
     protected ?Collection $cachedActivePimPermissions = null;
 
+    protected ?bool $cachedHasPimGroups = null;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -80,5 +82,14 @@ class User extends Authenticatable
     public function hasActivePimPermission(string $permissionKey): bool
     {
         return $this->activePimPermissions()->contains($permissionKey);
+    }
+
+    public function hasAssignedPimGroups(): bool
+    {
+        if ($this->cachedHasPimGroups !== null) {
+            return $this->cachedHasPimGroups;
+        }
+
+        return $this->cachedHasPimGroups = $this->pimGroups()->exists();
     }
 }

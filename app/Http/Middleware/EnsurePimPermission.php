@@ -33,6 +33,10 @@ class EnsurePimPermission
             throw new AuthorizationException('Authentication required for privileged operations.');
         }
 
+        if ($request->attributes->get('isPortalAdmin', false)) {
+            return $next($request);
+        }
+
         if (empty($permissions)) {
             return $next($request);
         }

@@ -1,5 +1,6 @@
 @php
     $isPortalAdmin = request()->attributes->get('isPortalAdmin', view()->shared('isPortalAdmin', false));
+    $showSelfServicePim = $hasSelfServicePim ?? false;
 @endphp
 
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
@@ -19,11 +20,11 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" onclick="showNavigationLoading(event)">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    @auth
+                    @if($showSelfServicePim)
                         <x-nav-link :href="route('pim.activation.index')" :active="request()->routeIs('pim.activation.*')" onclick="showNavigationLoading(event)">
                             {{ __('PIM Activation') }}
                         </x-nav-link>
-                    @endauth
+                    @endif
                     @if($isPortalAdmin)
                         <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')" onclick="showNavigationLoading(event)">
                             {{ __('Users') }}
@@ -94,11 +95,11 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" onclick="showNavigationLoading(event)">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            @auth
+            @if($showSelfServicePim)
                 <x-responsive-nav-link :href="route('pim.activation.index')" :active="request()->routeIs('pim.activation.*')" onclick="showNavigationLoading(event)">
                     {{ __('PIM Activation') }}
                 </x-responsive-nav-link>
-            @endauth
+            @endif
             @if($isPortalAdmin)
                 <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')" onclick="showNavigationLoading(event)">
                     {{ __('Users') }}

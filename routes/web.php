@@ -54,9 +54,9 @@ Route::middleware('auth')->group(function () {
 });
 
 // Portal Admin Routes - Require admin access
-Route::middleware(['auth', 'portal.admin:true'])->group(function () {
+Route::middleware(['auth', 'portal.admin:false'])->group(function () {
     // PIM Dashboard Routes - Admin access required
-    Route::prefix('pim')->name('pim.')->group(function () {
+    Route::prefix('pim')->name('pim.')->middleware('pim.permission:pim.manage')->group(function () {
         Route::get('/', [PimController::class, 'index'])->name('index');
         Route::post('/groups', [PimController::class, 'storeGroup'])->name('groups.store');
         Route::put('/groups/{group}', [PimController::class, 'updateGroup'])->name('groups.update');
@@ -65,7 +65,7 @@ Route::middleware(['auth', 'portal.admin:true'])->group(function () {
     
     
     // User Management Routes - Admin access required
-    Route::prefix('users')->name('users.')->group(function () {
+    Route::prefix('users')->name('users.')->middleware('pim.permission:users.view')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('index');
         Route::get('/onboard', [UserController::class, 'onboard'])->name('onboard');
         Route::post('/onboard', [UserController::class, 'processOnboard'])->name('onboard.process');
@@ -77,7 +77,7 @@ Route::middleware(['auth', 'portal.admin:true'])->group(function () {
         Route::post('/{id}/toggle-admin', [UserController::class, 'togglePortalAdmin'])->name('toggle-admin');
         Route::post('/{id}/send-recovery', [UserController::class, 'sendPasswordRecovery'])->name('send-recovery');
 
-        Route::prefix('{id}/pim')->name('pim.')->group(function () {
+        Route::prefix('{id}/pim')->name('pim.')->middleware('pim.permission:pim.activate')->group(function () {
             Route::post('/activate', [PimController::class, 'activate'])->name('activate');
             Route::post('/activations/{activation}/deactivate', [PimController::class, 'deactivate'])
                 ->whereNumber('activation')
@@ -89,7 +89,7 @@ Route::middleware(['auth', 'portal.admin:true'])->group(function () {
     });
     
     // Group Management Routes - Admin access required
-    Route::prefix('groups')->name('groups.')->group(function () {
+    Route::prefix('groups')->name('groups.')->middleware('pim.permission:groups.view')->group(function () {
         Route::get('/', [GroupController::class, 'index'])->name('index');
         Route::get('/create', [GroupController::class, 'create'])->name('create');
         Route::post('/', [GroupController::class, 'store'])->name('store');
@@ -102,7 +102,7 @@ Route::middleware(['auth', 'portal.admin:true'])->group(function () {
     });
     
     // Application Management Routes - Admin access required
-    Route::prefix('applications')->name('applications.')->group(function () {
+    Route::prefix('applications')->name('applications.')->middleware('pim.permission:applications.view')->group(function () {
         Route::get('/', [ApplicationController::class, 'index'])->name('index');
         Route::get('/debug', function() {
             try {
@@ -124,7 +124,7 @@ Route::middleware(['auth', 'portal.admin:true'])->group(function () {
     });
 
     // Git Management Routes - Admin access required
-    Route::prefix('git-management')->name('git-management.')->group(function () {
+    Route::prefix('git-management')->name('git-management.')->middleware('pim.permission:git.manage')->group(function () {
         Route::get('/', [GitManagementController::class, 'index'])->name('index');
         Route::get('/add', [GitManagedServerController::class, 'create'])->name('add');
         Route::post('/add', [GitManagedServerController::class, 'store'])->name('store');
@@ -133,7 +133,7 @@ Route::middleware(['auth', 'portal.admin:true'])->group(function () {
     });
 
     // Cache management routes
-    Route::prefix('cache')->name('cache.')->group(function () {
+    Route::prefix('cache')->name('cache.')->middleware('pim.permission:dashboard.update')->group(function () {
         Route::post('/clear', function () {
             \Illuminate\Support\Facades\Cache::flush();
             return redirect()->back()->with('success', 'Cache cleared successfully');

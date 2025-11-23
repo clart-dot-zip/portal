@@ -15,7 +15,7 @@ class GitManagementController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'portal.admin:true', 'pim.permission:git.manage']);
+        $this->middleware(['auth', 'portal.admin:false', 'pim.permission:git.manage']);
     }
 
     public function index(GitCommandExecutor $executor)
