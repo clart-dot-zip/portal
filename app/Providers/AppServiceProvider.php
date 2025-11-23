@@ -42,7 +42,7 @@ class AppServiceProvider extends ServiceProvider
             $user = Auth::user();
             $hasSelfServicePim = false;
 
-            if ($user && $pimService->isEnabled() && $pimService->isOperational()) {
+            if ($user && $pimService->isEnabled()) {
                 $hasSelfServicePim = $user->hasAssignedPimGroups();
             }
 
