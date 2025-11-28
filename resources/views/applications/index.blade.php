@@ -1,251 +1,199 @@
 @section('title', 'Applications - ' . config('app.name'))
+@section('page_title', 'Applications')
 
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Applications') }}
-            </h2>
-            <div class="flex space-x-3">
-                <a href="{{ route('dashboard') }}" 
-                   class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    Back to Dashboard
-                </a>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-xl font-semibold text-fluent-neutral-30">{{ __('Applications') }}</h1>
+                <p class="text-sm text-fluent-neutral-26 mt-1">{{ __('Browse and manage your applications') }}</p>
             </div>
         </div>
     </x-slot>
-
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
-            <!-- Status Messages -->
-            @if(session('success'))
-                <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-                    <span class="block sm:inline">{{ session('success') }}</span>
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                    <span class="block sm:inline">{{ session('error') }}</span>
-                </div>
-            @endif
-
-            @if(isset($error))
-                <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                    <span class="block sm:inline">{{ $error }}</span>
-                </div>
-            @endif
-
-            <!-- Search and Controls -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-6 border-b border-gray-200">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-                        <!-- Search Form -->
-                        <div class="flex-1 max-w-lg">
-                            <form method="GET" action="{{ route('applications.index') }}" class="flex">
-                                <div class="relative flex-1">
-                                    <input type="text" 
-                                           name="search" 
-                                           value="{{ $search ?? '' }}"
-                                           placeholder="Search applications..." 
-                                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-l-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <button type="submit" 
-                                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-r-lg transition-colors duration-200">
-                                    Search
-                                </button>
-                            </form>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="flex items-center space-x-3">
-                            @if($search)
-                                <a href="{{ route('applications.index') }}" 
-                                   class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
-                                    Clear Search
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                </div>
+    @if(session('success'))
+        <x-fluent-card padding="small" class="bg-green-50 border-green-200 mb-4">
+            <div class="flex items-start gap-3">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" class="text-fluent-success flex-shrink-0">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <p class="text-sm font-medium text-fluent-success flex-1">{{ session('success') }}</p>
             </div>
+        </x-fluent-card>
+    @endif
+
+    @if(session('error') || isset($error))
+        <x-fluent-card padding="small" class="bg-red-50 border-red-200 mb-4">
+            <div class="flex items-start gap-3">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" class="text-fluent-error flex-shrink-0">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                <p class="text-sm font-medium text-fluent-error flex-1">{{ session('error') ?? $error ?? '' }}</p>
+            </div>
+        </x-fluent-card>
+    @endif
+
+    <x-fluent-card title="Search Applications" class="mb-4">
+        <form method="GET" action="{{ route('applications.index') }}" class="flex flex-col md:flex-row gap-3 items-end">
+            <div class="flex-1">
+                <x-fluent-input
+                    type="text"
+                    name="search"
+                    :value="$search ?? ''"
+                    placeholder="{{ __('Search applications...') }}"
+                    icon='<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>'
+                />
+            </div>
+            <div class="flex gap-2">
+                <x-fluent-button type="submit" variant="primary">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                    </svg>
+                    {{ __('Search') }}
+                </x-fluent-button>
+                @if($search ?? false)
+                    <x-fluent-button variant="secondary" onclick="window.location.href='{{ route('applications.index') }}'">
+                        {{ __('Clear') }}
+                    </x-fluent-button>
+                @endif
+            </div>
+        </form>
+    </x-fluent-card>
 
             <!-- Applications List -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-medium text-gray-900">
-                            @if($search)
-                                Search Results for "{{ $search }}"
-                            @else
-                                All Applications
+            <x-fluent-card>
+                <x-slot name="header">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <div>
+                            <h3 class="text-base font-semibold text-fluent-neutral-30">
+                                @if($search)
+                                    {{ __('Search Results for ":term"', ['term' => $search]) }}
+                                @else
+                                    {{ __('All Applications') }}
+                                @endif
+                            </h3>
+                            @if(isset($pagination))
+                                <p class="text-xs text-fluent-neutral-26 mt-0.5">
+                                    {{ __('Showing :count of :total applications', ['count' => count($applications), 'total' => number_format($pagination['total'])]) }}
+                                </p>
                             @endif
-                        </h3>
-                        
-                        @if(isset($pagination))
-                            <div class="text-sm text-gray-500">
-                                Showing {{ count($applications) }} of {{ number_format($pagination['total']) }} applications
-                            </div>
-                        @endif
-                    </div>
-
-                    @if(count($applications) > 0)
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            @foreach($applications as $application)
-                                <!-- Debug: PK={{ $application['pk'] ?? 'NO_PK' }}, Name={{ $application['name'] ?? 'NO_NAME' }} -->
-                                <div class="border border-gray-200 rounded-lg p-6 hover:border-gray-300 transition-colors">
-                                    <div class="flex items-start justify-between">
-                                        <div class="flex-1">
-                                            <h4 class="text-lg font-medium text-gray-900 mb-2">
-                                                {{ $application['name'] }}
-                                            </h4>
-                                            
-                                            @if(isset($application['slug']) && $application['slug'])
-                                                <p class="text-sm text-gray-600 mb-2">
-                                                    <span class="font-medium">Slug:</span> {{ $application['slug'] }}
-                                                </p>
-                                            @endif
-                                            
-                                            @if(isset($application['meta_description']) && $application['meta_description'])
-                                                <p class="text-sm text-gray-600 mb-3">
-                                                    {{ Str::limit($application['meta_description'], 100) }}
-                                                </p>
-                                            @endif
-
-                                            <!-- Application Status -->
-                                            <div class="flex items-center space-x-4 mb-4">
-                                                @if(isset($application['provider']) && $application['provider'])
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                        Provider: {{ $application['provider_obj']['name'] ?? 'Configured' }}
-                                                    </span>
-                                                @else
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                        No Provider
-                                                    </span>
-                                                @endif
-                                                
-                                                @if(isset($application['meta_launch_url']) && $application['meta_launch_url'])
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                        Launchable
-                                                    </span>
-                                                @endif
-                                            </div>
-
-                                            <!-- Action Buttons -->
-                                            <div class="flex space-x-2">
-                                                <a href="{{ route('applications.show', $application['pk']) }}" 
-                                                   class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-md transition-colors duration-200 inline-block">
-                                                    View Details
-                                                </a>
-                                                <a href="{{ route('applications.edit', $application['pk']) }}" 
-                                                   class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-1 px-3 rounded-md transition-colors duration-200 inline-block">
-                                                    Manage Access
-                                                </a>
-                                                @if(isset($application['meta_launch_url']) && $application['meta_launch_url'])
-                                                    <a href="{{ $application['meta_launch_url'] }}" 
-                                                       target="_blank"
-                                                       class="bg-green-600 hover:bg-green-700 text-white font-medium py-1 px-3 rounded-md transition-colors duration-200 inline-block">
-                                                        Launch
-                                                        <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                                        </svg>
-                                                    </a>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
                         </div>
+                    </div>
+                </x-slot>
 
-                        <!-- Pagination -->
-                        @if(isset($pagination) && $pagination['last_page'] > 1)
-                            <div class="mt-6 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
-                                <div class="flex flex-1 justify-between sm:hidden">
-                                    @if($pagination['current_page'] > 1)
-                                        <a href="{{ route('applications.index', array_merge(request()->query(), ['page' => $pagination['current_page'] - 1])) }}" 
-                                           class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                            Previous
-                                        </a>
-                                    @endif
-                                    
-                                    @if($pagination['current_page'] < $pagination['last_page'])
-                                        <a href="{{ route('applications.index', array_merge(request()->query(), ['page' => $pagination['current_page'] + 1])) }}" 
-                                           class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                            Next
-                                        </a>
-                                    @endif
+                @if(count($applications) > 0)
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @foreach($applications as $application)
+                            <div class="fluent-card bg-white border border-fluent-neutral-10 rounded-lg p-4 hover:shadow-md hover:border-fluent-brand-60 transition-all duration-200">
+                                <div class="flex items-start gap-3 mb-3">
+                                    <div class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-fluent-brand-60 to-fluent-brand-70 text-white">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-sm font-semibold text-fluent-neutral-30 mb-1">
+                                            {{ $application['name'] }}
+                                        </h4>
+                                        @if(isset($application['slug']) && $application['slug'])
+                                            <p class="text-xs text-fluent-neutral-26">{{ $application['slug'] }}</p>
+                                        @endif
+                                    </div>
                                 </div>
                                 
-                                <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                                    <div>
-                                        <p class="text-sm text-gray-700">
-                                            Showing page {{ $pagination['current_page'] }} of {{ $pagination['last_page'] }}
-                                            ({{ number_format($pagination['total']) }} total applications)
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                                            @if($pagination['current_page'] > 1)
-                                                <a href="{{ route('applications.index', array_merge(request()->query(), ['page' => $pagination['current_page'] - 1])) }}" 
-                                                   class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
-                                                    Previous
-                                                </a>
-                                            @endif
-                                            
-                                            @for($i = max(1, $pagination['current_page'] - 2); $i <= min($pagination['last_page'], $pagination['current_page'] + 2); $i++)
-                                                <a href="{{ route('applications.index', array_merge(request()->query(), ['page' => $i])) }}" 
-                                                   class="relative inline-flex items-center px-4 py-2 text-sm font-semibold {{ $i == $pagination['current_page'] ? 'bg-indigo-600 text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600' : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0' }}">
-                                                    {{ $i }}
-                                                </a>
-                                            @endfor
-                                            
-                                            @if($pagination['current_page'] < $pagination['last_page'])
-                                                <a href="{{ route('applications.index', array_merge(request()->query(), ['page' => $pagination['current_page'] + 1])) }}" 
-                                                   class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
-                                                    Next
-                                                </a>
-                                            @endif
-                                        </nav>
-                                    </div>
+                                @if(isset($application['meta_description']) && $application['meta_description'])
+                                    <p class="text-xs text-fluent-neutral-26 mb-3 line-clamp-2">
+                                        {{ Str::limit($application['meta_description'], 100) }}
+                                    </p>
+                                @endif
+
+                                <div class="flex flex-wrap gap-1.5 mb-3">
+                                    @if(isset($application['provider']) && $application['provider'])
+                                        <x-fluent-badge variant="success" size="small">
+                                            {{ $application['provider_obj']['name'] ?? 'Configured' }}
+                                        </x-fluent-badge>
+                                    @else
+                                        <x-fluent-badge variant="warning" size="small">No Provider</x-fluent-badge>
+                                    @endif
+                                    
+                                    @if(isset($application['meta_launch_url']) && $application['meta_launch_url'])
+                                        <x-fluent-badge variant="info" size="small">Launchable</x-fluent-badge>
+                                    @endif
+                                </div>
+
+                                <div class="flex flex-wrap gap-2">
+                                    <a href="{{ route('applications.show', $application['pk']) }}" 
+                                       class="flex-1 text-center px-3 py-1.5 bg-fluent-brand-60 hover:bg-fluent-brand-70 text-white text-xs font-semibold rounded transition-colors">
+                                        Details
+                                    </a>
+                                    <a href="{{ route('applications.edit', $application['pk']) }}" 
+                                       class="flex-1 text-center px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold rounded transition-colors">
+                                        Manage
+                                    </a>
+                                    @if(isset($application['meta_launch_url']) && $application['meta_launch_url'])
+                                        <a href="{{ $application['meta_launch_url'] }}" 
+                                           target="_blank"
+                                           class="flex items-center justify-center px-3 py-1.5 bg-fluent-success hover:bg-green-700 text-white text-xs font-semibold rounded transition-colors">
+                                            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                                                <path d="M10.5 1.5h-3a.5.5 0 000 1h1.793L4.646 7.146a.5.5 0 00.708.708L10 3.207V5a.5.5 0 001 0V2a.5.5 0 00-.5-.5z"/>
+                                            </svg>
+                                        </a>
+                                    @endif
                                 </div>
                             </div>
-                        @endif
+                        @endforeach
+                    </div>
 
-                    @else
-                        <div class="text-center py-12">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                            </svg>
-                            <h3 class="mt-2 text-sm font-medium text-gray-900">No applications found</h3>
-                            <p class="mt-1 text-sm text-gray-500">
-                                @if($search)
-                                    Try adjusting your search terms or clearing the search to see all applications.
-                                @else
-                                    There are no applications configured in Authentik yet.
-                                @endif
+
+                    @if(isset($pagination) && $pagination['last_page'] > 1)
+                        <div class="flex flex-col md:flex-row items-center justify-between gap-3 pt-4 border-t border-fluent-neutral-10 mt-6">
+                            <p class="text-sm text-fluent-neutral-26">
+                                {{ __('Page :current of :last (:total applications)', [
+                                    'current' => $pagination['current_page'],
+                                    'last' => $pagination['last_page'],
+                                    'total' => number_format($pagination['total']),
+                                ]) }}
                             </p>
-                            @if($search)
-                                <div class="mt-6">
-                                    <a href="{{ route('applications.index') }}" 
-                                       class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                        View All Applications
-                                    </a>
-                                </div>
-                            @endif
+                            <div class="flex gap-2">
+                                @if($pagination['current_page'] > 1)
+                                    <x-fluent-button 
+                                        variant="secondary" 
+                                        size="small"
+                                        onclick="window.location.href='{{ route('applications.index', array_merge(request()->query(), ['page' => $pagination['current_page'] - 1])) }}'"
+                                    >
+                                        {{ __('Previous') }}
+                                    </x-fluent-button>
+                                @endif
+                                @if($pagination['current_page'] < $pagination['last_page'])
+                                    <x-fluent-button 
+                                        variant="secondary" 
+                                        size="small"
+                                        onclick="window.location.href='{{ route('applications.index', array_merge(request()->query(), ['page' => $pagination['current_page'] + 1])) }}'"
+                                    >
+                                        {{ __('Next') }}
+                                    </x-fluent-button>
+                                @endif
+                            </div>
                         </div>
                     @endif
-                </div>
-            </div>
-        </div>
-    </div>
+                @else
+                    <div class="text-center py-12">
+                        <svg width="64" height="64" viewBox="0 0 64 64" fill="currentColor" class="mx-auto text-fluent-neutral-22 mb-4">
+                            <path d="M8 8h20v20H8V8zm28 0h20v20H36V8zM8 36h20v20H8V36zm28 0h20v20H36V36z"/>
+                        </svg>
+                        <h5 class="text-lg font-semibold text-fluent-neutral-30 mb-2">{{ __('No applications found') }}</h5>
+                        <p class="text-sm text-fluent-neutral-26 mb-4">
+                            @if($search)
+                                {{ __('Try adjusting your search terms or clearing the search.') }}
+                            @else
+                                {{ __('There are no applications configured in Authentik yet.') }}
+                            @endif
+                        </p>
+                        @if($search)
+                            <x-fluent-button variant="primary" onclick="window.location.href='{{ route('applications.index') }}'">
+                                {{ __('View All Applications') }}
+                            </x-fluent-button>
+                        @endif
+                    </div>
+                @endif
+            </x-fluent-card>
 </x-app-layout>
