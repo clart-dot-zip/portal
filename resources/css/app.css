@@ -3,6 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Dashboard Specific Styles */
+@import './dashboard.css';
+
 /* CSS Variables for Fluent UI Design Tokens */
 :root {
     /* Brand Colors - Azure Blue */

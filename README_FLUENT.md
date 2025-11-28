@@ -50,6 +50,30 @@ The portal now matches the aesthetic of:
 
 ## 🚀 Getting Started
 
+### Quick Setup (After Pulling Changes)
+
+```bash
+# Navigate to project directory
+cd c:\All\GitHub\portal
+
+# Install dependencies
+npm install
+composer install
+
+# Build frontend assets
+npm run build
+
+# Clear Laravel caches
+php artisan cache:clear
+php artisan config:clear
+php artisan view:clear
+
+# Start server
+php artisan serve
+```
+
+**For detailed setup instructions, see [SETUP.md](SETUP.md)**
+
 ### Installation
 ```bash
 # Install dependencies

@@ -8,7 +8,7 @@
 
     <title>@yield('title', config('app.name', 'Portal'))</title>
 
-    @vite(['resources/css/app.css', 'resources/css/dashboard.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
 </head>
 @php
