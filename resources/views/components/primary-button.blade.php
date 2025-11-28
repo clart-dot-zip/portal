@@ -1,10 +1,3 @@
-@props(['type' => 'submit'])
-
-<x-fluent-button
-    :type="$type"
-    variant="primary"
-    size="medium"
-    {{ $attributes }}
->
+<button {{ $attributes->merge(['type' => 'submit', 'class' => 'btn btn-portal-primary text-uppercase font-weight-bold btn-sm']) }}>
     {{ $slot }}
-</x-fluent-button>
+</button>

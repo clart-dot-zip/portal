@@ -75,7 +75,7 @@ $maxWidthClass = $maxWidthClasses[$maxWidth] ?? $maxWidthClasses['md'];
         x-transition:leave="transition ease-in duration-100"
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
-        class="relative bg-white rounded-lg shadow-depth64 w-full {{ $maxWidthClass }} max-h-[90vh] flex flex-col"
+        class="relative bg-white rounded-lg shadow-fluent-shadow-64 w-full {{ $maxWidthClass }} max-h-[90vh] flex flex-col"
         @click.stop
     >
         @if($title || $closeable)

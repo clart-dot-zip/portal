@@ -9,14 +9,14 @@
 ])
 
 @php
-$baseClasses = 'fluent-button inline-flex items-center justify-center gap-2 font-semibold transition-all duration-100 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-fluent-brand-60';
+$baseClasses = 'fluent-button inline-flex items-center justify-center gap-2 font-semibold transition-all duration-100 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-fluent-brand-60 focus:ring-offset-2';
 
 $variantClasses = [
-    'primary' => 'fluent-button-primary',
-    'secondary' => 'fluent-button-secondary',
-    'subtle' => 'fluent-button-subtle hover:bg-fluent-neutral-8',
-    'outline' => 'fluent-button-outline hover:bg-fluent-brand-10',
-    'danger' => 'fluent-button-danger',
+    'primary' => 'fluent-button-primary bg-fluent-brand-60 text-white hover:bg-fluent-brand-70 active:bg-fluent-brand-80 border border-fluent-brand-60',
+    'secondary' => 'fluent-button-secondary bg-white text-fluent-neutral-30 border border-fluent-neutral-14 hover:bg-fluent-neutral-8 active:bg-fluent-neutral-10',
+    'subtle' => 'bg-transparent text-fluent-neutral-30 hover:bg-fluent-neutral-8 active:bg-fluent-neutral-10',
+    'outline' => 'bg-transparent text-fluent-brand-60 border border-fluent-brand-60 hover:bg-fluent-brand-10 active:bg-fluent-brand-20',
+    'danger' => 'bg-fluent-error text-white hover:bg-red-600 active:bg-red-700 border border-fluent-error',
 ];
 
 $sizeClasses = [
