@@ -1,11 +1,383 @@
-@import "@fortawesome/fontawesome-free/css/all.min.css";
-@import "overlayscrollbars/css/OverlayScrollbars.min.css";
-@import "admin-lte/dist/css/adminlte.min.css";
-@import "./dashboard.css";
-
+/* Fluent UI 2 Base Styles */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* CSS Variables for Fluent UI Design Tokens */
+:root {
+    /* Brand Colors - Azure Blue */
+    --fluent-brand: #0078d4;
+    --fluent-brand-hover: #106ebe;
+    --fluent-brand-pressed: #005a9e;
+    
+    /* Neutral Colors */
+    --fluent-neutral-background: #faf9f8;
+    --fluent-neutral-foreground: #323130;
+    --fluent-neutral-stroke: #edebe9;
+    
+    /* Semantic Colors */
+    --fluent-success: #107c10;
+    --fluent-warning: #ffc83d;
+    --fluent-error: #d13438;
+    --fluent-info: #0078d4;
+    
+    /* Typography */
+    --fluent-font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+    --fluent-font-size-base: 14px;
+    --fluent-font-size-caption: 12px;
+    --fluent-font-size-subtitle: 18px;
+    --fluent-font-size-title: 28px;
+    
+    /* Spacing (4px base) */
+    --fluent-spacing-xs: 4px;
+    --fluent-spacing-sm: 8px;
+    --fluent-spacing-md: 12px;
+    --fluent-spacing-lg: 16px;
+    --fluent-spacing-xl: 20px;
+    --fluent-spacing-xxl: 24px;
+    
+    /* Border Radius */
+    --fluent-border-radius-sm: 2px;
+    --fluent-border-radius-md: 4px;
+    --fluent-border-radius-lg: 8px;
+    
+    /* Shadows (Elevation) */
+    --fluent-shadow-4: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.132), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.108);
+    --fluent-shadow-8: 0 3.2px 7.2px 0 rgba(0, 0, 0, 0.132), 0 0.6px 1.8px 0 rgba(0, 0, 0, 0.108);
+    --fluent-shadow-16: 0 6.4px 14.4px 0 rgba(0, 0, 0, 0.132), 0 1.2px 3.6px 0 rgba(0, 0, 0, 0.108);
+    --fluent-shadow-64: 0 25.6px 57.6px 0 rgba(0, 0, 0, 0.22), 0 4.8px 14.4px 0 rgba(0, 0, 0, 0.18);
+    
+    /* Motion */
+    --fluent-duration-fast: 100ms;
+    --fluent-duration-normal: 200ms;
+    --fluent-duration-slow: 400ms;
+    --fluent-ease-accelerate: cubic-bezier(0.9, 0.1, 1, 0.2);
+    --fluent-ease-decelerate: cubic-bezier(0.1, 0.9, 0.2, 1);
+    --fluent-ease-standard: cubic-bezier(0.8, 0, 0.2, 1);
+}
+
+@layer base {
+    body {
+        font-family: var(--fluent-font-family);
+        font-size: var(--fluent-font-size-base);
+        color: var(--fluent-neutral-foreground);
+        background-color: var(--fluent-neutral-background);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: 600;
+        color: var(--fluent-neutral-foreground);
+    }
+    
+    h1 { font-size: var(--fluent-font-size-title); line-height: 36px; }
+    h2 { font-size: var(--fluent-font-size-subtitle); line-height: 24px; }
+    h3 { font-size: 16px; line-height: 22px; font-weight: 600; }
+}
+
+@layer components {
+    /* Fluent UI Card Component */
+    .fluent-card {
+        background: white;
+        border: 1px solid var(--fluent-neutral-stroke);
+        border-radius: var(--fluent-border-radius-lg);
+        box-shadow: var(--fluent-shadow-4);
+        transition: box-shadow var(--fluent-duration-normal) var(--fluent-ease-standard);
+    }
+    
+    .fluent-card:hover {
+        box-shadow: var(--fluent-shadow-8);
+    }
+    
+    /* Fluent UI Button Styles */
+    .fluent-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-family: var(--fluent-font-family);
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 20px;
+        padding: 5px 12px;
+        min-height: 32px;
+        border-radius: var(--fluent-border-radius-md);
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all var(--fluent-duration-fast) var(--fluent-ease-standard);
+        user-select: none;
+    }
+    
+    .fluent-button-primary {
+        background-color: var(--fluent-brand);
+        color: white;
+        border-color: var(--fluent-brand);
+    }
+    
+    .fluent-button-primary:hover {
+        background-color: var(--fluent-brand-hover);
+        border-color: var(--fluent-brand-hover);
+    }
+    
+    .fluent-button-primary:active {
+        background-color: var(--fluent-brand-pressed);
+        border-color: var(--fluent-brand-pressed);
+    }
+    
+    .fluent-button-secondary {
+        background-color: white;
+        color: var(--fluent-neutral-foreground);
+        border-color: var(--fluent-neutral-stroke);
+    }
+    
+    .fluent-button-secondary:hover {
+        background-color: #f3f2f1;
+    }
+    
+    .fluent-button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+    
+    /* Fluent UI Input Fields */
+    .fluent-input {
+        font-family: var(--fluent-font-family);
+        font-size: 14px;
+        line-height: 20px;
+        padding: 5px 8px;
+        min-height: 32px;
+        border: 1px solid var(--fluent-neutral-stroke);
+        border-radius: var(--fluent-border-radius-md);
+        background: white;
+        color: var(--fluent-neutral-foreground);
+        transition: border-color var(--fluent-duration-fast) var(--fluent-ease-standard);
+    }
+    
+    .fluent-input:hover {
+        border-color: #b3b0ad;
+    }
+    
+    .fluent-input:focus {
+        outline: none;
+        border-color: var(--fluent-brand);
+        box-shadow: 0 0 0 1px var(--fluent-brand);
+    }
+    
+    /* Fluent UI Badge Component */
+    .fluent-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 16px;
+        border-radius: 12px;
+        white-space: nowrap;
+    }
+    
+    .fluent-badge-success {
+        background-color: #dff6dd;
+        color: var(--fluent-success);
+    }
+    
+    .fluent-badge-warning {
+        background-color: #fff4ce;
+        color: #8a5100;
+    }
+    
+    .fluent-badge-error {
+        background-color: #fde7e9;
+        color: var(--fluent-error);
+    }
+    
+    .fluent-badge-info {
+        background-color: #e6f2fb;
+        color: var(--fluent-brand);
+    }
+    
+    .fluent-badge-neutral {
+        background-color: #f3f2f1;
+        color: var(--fluent-neutral-foreground);
+    }
+    
+    /* Azure Portal Navigation Rail */
+    .fluent-nav-rail {
+        width: 48px;
+        background-color: #f5f5f5;
+        border-right: 1px solid var(--fluent-neutral-stroke);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 8px 0;
+        gap: 4px;
+    }
+    
+    .fluent-nav-rail.expanded {
+        width: 220px;
+        align-items: stretch;
+    }
+    
+    .fluent-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 12px;
+        border-radius: var(--fluent-border-radius-md);
+        color: var(--fluent-neutral-foreground);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 400;
+        transition: background-color var(--fluent-duration-fast);
+        cursor: pointer;
+    }
+    
+    .fluent-nav-item:hover {
+        background-color: #e1dfdd;
+    }
+    
+    .fluent-nav-item.active {
+        background-color: #e6f2fb;
+        color: var(--fluent-brand);
+        font-weight: 600;
+    }
+    
+    /* Azure Command Bar */
+    .fluent-command-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: white;
+        border-bottom: 1px solid var(--fluent-neutral-stroke);
+        min-height: 44px;
+    }
+    
+    /* Fluent UI Table */
+    .fluent-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    
+    .fluent-table thead th {
+        text-align: left;
+        padding: 8px 12px;
+        font-weight: 600;
+        color: var(--fluent-neutral-foreground);
+        border-bottom: 1px solid var(--fluent-neutral-stroke);
+        background-color: #faf9f8;
+    }
+    
+    .fluent-table tbody td {
+        padding: 12px;
+        border-bottom: 1px solid var(--fluent-neutral-stroke);
+    }
+    
+    .fluent-table tbody tr:hover {
+        background-color: #f3f2f1;
+    }
+    
+    .fluent-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+}
+
+@layer utilities {
+    /* Fluent UI Motion */
+    .fluent-fade-in {
+        animation: fluentFadeIn var(--fluent-duration-normal) var(--fluent-ease-decelerate);
+    }
+    
+    .fluent-slide-up {
+        animation: fluentSlideUp var(--fluent-duration-normal) var(--fluent-ease-decelerate);
+    }
+    
+    /* Loading States */
+    .fluent-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #e1dfdd;
+        border-top-color: var(--fluent-brand);
+        border-radius: 50%;
+        animation: fluentSpin 0.8s linear infinite;
+    }
+    
+    .fluent-shimmer {
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(0, 0, 0, 0.04),
+            transparent
+        );
+        background-size: 200% 100%;
+        animation: fluentShimmer 1.5s infinite;
+    }
+}
+
+/* Animations */
+@keyframes fluentFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fluentSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fluentSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fluentShimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Scrollbar styling (Fluent UI) */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #c8c6c4;
+    border-radius: 6px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #a19f9d;
+}
+
+/* Focus visible styling for accessibility */
+:focus-visible {
+    outline: 2px solid var(--fluent-brand);
+    outline-offset: 2px;
+}
+
 
 :root {
     --portal-primary: #3c8dbc;

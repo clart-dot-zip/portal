@@ -1,14 +1,361 @@
-/* Dashboard specific styles */
-@keyframes fadeInUp {
+/* Dashboard Fluent UI Styles - Azure Portal Theme */
+
+/* Dashboard Grid Layout */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    padding: 20px;
+}
+
+/* Stat Cards - Azure Portal Style */
+.fluent-stat-card {
+    background: white;
+    border: 1px solid #edebe9;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.132), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.108);
+    transition: all 200ms cubic-bezier(0.8, 0, 0.2, 1);
+}
+
+.fluent-stat-card:hover {
+    box-shadow: 0 3.2px 7.2px 0 rgba(0, 0, 0, 0.132), 0 0.6px 1.8px 0 rgba(0, 0, 0, 0.108);
+    transform: translateY(-2px);
+}
+
+.fluent-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 12px;
+}
+
+.fluent-stat-icon.brand {
+    background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+    color: white;
+}
+
+.fluent-stat-icon.success {
+    background: linear-gradient(135deg, #107c10 0%, #0b5a08 100%);
+    color: white;
+}
+
+.fluent-stat-icon.warning {
+    background: linear-gradient(135deg, #ffc83d 0%, #ca7f00 100%);
+    color: #323130;
+}
+
+.fluent-stat-icon.error {
+    background: linear-gradient(135deg, #d13438 0%, #a4262c 100%);
+    color: white;
+}
+
+.fluent-stat-value {
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 40px;
+    color: #323130;
+    margin-bottom: 4px;
+}
+
+.fluent-stat-label {
+    font-size: 14px;
+    color: #605e5c;
+    margin-bottom: 8px;
+}
+
+.fluent-stat-change {
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.fluent-stat-change.positive {
+    color: #107c10;
+}
+
+.fluent-stat-change.negative {
+    color: #d13438;
+}
+
+/* Chart Container - Azure Style */
+.fluent-chart-container {
+    background: white;
+    border: 1px solid #edebe9;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.132), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.108);
+}
+
+.fluent-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.fluent-chart-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #323130;
+}
+
+.fluent-chart-canvas {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Quick Actions Grid - M365 Style */
+.fluent-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.fluent-action-tile {
+    background: white;
+    border: 1px solid #edebe9;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    color: #323130;
+    transition: all 100ms cubic-bezier(0.8, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.fluent-action-tile::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--fluent-brand);
+    transform: scaleX(0);
+    transition: transform 200ms cubic-bezier(0.8, 0, 0.2, 1);
+}
+
+.fluent-action-tile:hover {
+    box-shadow: 0 3.2px 7.2px 0 rgba(0, 0, 0, 0.132), 0 0.6px 1.8px 0 rgba(0, 0, 0, 0.108);
+    transform: translateY(-1px);
+    border-color: #d2d0ce;
+}
+
+.fluent-action-tile:hover::before {
+    transform: scaleX(1);
+}
+
+.fluent-action-tile:active {
+    transform: translateY(0);
+}
+
+.fluent-action-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background: #f3f2f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--fluent-brand);
+}
+
+.fluent-action-label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Welcome Banner - Azure Portal Style */
+.fluent-welcome-banner {
+    background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+    color: white;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 3.2px 7.2px 0 rgba(0, 0, 0, 0.132), 0 0.6px 1.8px 0 rgba(0, 0, 0, 0.108);
+}
+
+.fluent-welcome-title {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.fluent-welcome-subtitle {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* Info Boxes - Azure Style */
+.fluent-info-box {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: white;
+    border: 1px solid #edebe9;
+    border-radius: 8px;
+    box-shadow: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.132), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.108);
+}
+
+.fluent-info-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #e6f2fb;
+    color: var(--fluent-brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.fluent-info-content {
+    flex: 1;
+}
+
+.fluent-info-label {
+    font-size: 12px;
+    color: #605e5c;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.fluent-info-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #323130;
+}
+
+/* Loading State for Dashboard */
+.dashboard-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+}
+
+.fluent-progress-ring {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #e1dfdd;
+    border-top-color: var(--fluent-brand);
+    border-radius: 50%;
+    animation: fluentSpin 0.8s linear infinite;
+}
+
+/* Recent Activity List - Azure Style */
+.fluent-activity-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.fluent-activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #edebe9;
+}
+
+.fluent-activity-item:last-child {
+    border-bottom: none;
+}
+
+.fluent-activity-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e1dfdd;
+    flex-shrink: 0;
+}
+
+.fluent-activity-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.fluent-activity-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #323130;
+    margin-bottom: 2px;
+}
+
+.fluent-activity-description {
+    font-size: 12px;
+    color: #605e5c;
+}
+
+.fluent-activity-time {
+    font-size: 12px;
+    color: #8a8886;
+    white-space: nowrap;
+}
+
+/* Animations */
+@keyframes fluentFadeInUp {
     from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(20px);
     }
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
+
+.fluent-fade-in-up {
+    animation: fluentFadeInUp 400ms cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        padding: 12px;
+    }
+    
+    .fluent-chart-canvas {
+        height: 250px;
+    }
+    
+    .fluent-quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .fluent-welcome-title {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .fluent-quick-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    .fluent-stat-card {
+        padding: 16px;
+    }
+}
+
 
 @keyframes pulse {
     0%, 100% {

@@ -6,12 +6,9 @@
         "dev": "vite"
     },
     "dependencies": {
-        "@fortawesome/fontawesome-free": "^6.5.1",
-        "admin-lte": "^3.2.0",
-        "bootstrap": "^4.6.2",
-        "jquery": "^3.7.1",
-        "overlayscrollbars": "^1.13.3",
-        "popper.js": "^1.16.1"
+        "@fluentui/web-components": "^2.6.0",
+        "@fluentui/tokens": "^1.0.0",
+        "@fluentui/svg-icons": "^1.1.231"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",
