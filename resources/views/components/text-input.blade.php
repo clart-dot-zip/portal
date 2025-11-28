@@ -1,13 +1,15 @@
 @props(['disabled' => false])
 
 @php
-	$inputClasses = 'form-control';
-	if ($attributes->get('readonly')) {
-		$inputClasses .= ' bg-light';
-	}
-	if ($errors->has($attributes->get('name'))) {
-		$inputClasses .= ' is-invalid';
+	$name = $attributes->get('name');
+	$hasError = $name && $errors->has($name);
+	$baseClasses = 'fluent-input';
+	if ($hasError) {
+		$baseClasses .= ' border-fluent-error focus:border-fluent-error focus:ring-0';
 	}
 @endphp
 
-<input @disabled($disabled) {{ $attributes->merge(['class' => $inputClasses]) }}>
+<input
+	@disabled($disabled)
+	{{ $attributes->merge(['class' => $baseClasses]) }}
+/>

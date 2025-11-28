@@ -29,18 +29,3 @@ $cellPadding = $compact ? 'px-3 py-2' : 'px-4 py-3';
         </tbody>
     </table>
 </div>
-
-{{-- Helper for table rows --}}
-@php
-if (!function_exists('fluentTableRow')) {
-    function fluentTableRow($attributes = '') {
-        return "<tr class='transition-colors {$GLOBALS['rowHoverClass']}' {$attributes}>";
-    }
-}
-
-if (!function_exists('fluentTableCell')) {
-    function fluentTableCell($content, $attributes = '') {
-        return "<td class='text-sm text-fluent-neutral-30 {$GLOBALS['cellPadding']}' {$attributes}>{$content}</td>";
-    }
-}
-@endphp

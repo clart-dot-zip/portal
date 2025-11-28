@@ -60,7 +60,7 @@
     ];
 @endphp
 
-<body class="h-full bg-fluent-neutral-6" x-data="{ sidebarExpanded: $store.navigation.sidebarExpanded }">
+<body class="fluent-shell" x-data="{}">
     <!-- Fluent UI Loading Overlay -->
     <div id="fluentPreloader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center transition-opacity duration-300">
         <img src="{{ asset('images/clart.png') }}" alt="{{ config('app.name', 'Portal') }}" class="w-16 h-16 mb-4 animate-pulse">
@@ -69,105 +69,98 @@
     </div>
 
     <!-- Azure Portal AppShell Layout -->
-    <div class="h-full flex flex-col">
+    <div class="fluent-app">
         <!-- Top Command Bar -->
-        <div class="fluent-command-bar bg-white border-b border-fluent-neutral-14 h-11 flex-shrink-0 z-30">
-            <div class="flex items-center justify-between h-full px-2">
-                <!-- Left: Brand & Navigation Toggle -->
-                <div class="flex items-center gap-2">
-                    <button 
-                        @click="$store.navigation.toggle()"
-                        class="fluent-button-secondary px-2 py-1 rounded hover:bg-fluent-neutral-8"
-                        aria-label="Toggle navigation"
-                    >
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
-                        </svg>
-                    </button>
-                    
-                    <a href="{{ route('dashboard') }}" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                        <img src="{{ asset('images/clart.png') }}" alt="Logo" class="w-6 h-6">
-                        <span class="text-sm font-semibold text-fluent-neutral-30 hidden md:inline">{{ config('app.name', 'Portal') }}</span>
-                    </a>
-                </div>
+        <div class="fluent-command-bar">
+            <div class="fluent-command-section">
+                <button
+                    @click="$store.navigation.toggle()"
+                    class="fluent-command-button"
+                    aria-label="Toggle navigation"
+                >
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
 
-                <!-- Right: Search, Notifications, User Menu -->
-                <div class="flex items-center gap-2">
-                    <!-- Search (placeholder for future) -->
-                    <button class="fluent-button-secondary px-2 py-1 rounded hover:bg-fluent-neutral-8 hidden lg:flex items-center gap-2" disabled>
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
-                        </svg>
-                        <span class="text-xs">Search</span>
-                    </button>
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <img src="{{ asset('images/clart.png') }}" alt="Logo" class="w-6 h-6">
+                    <span class="text-sm font-semibold text-fluent-neutral-30 hidden md:inline">{{ config('app.name', 'Portal') }}</span>
+                </a>
+            </div>
 
-                    <!-- User Menu -->
-                    @auth
-                        <div x-data="{ open: false }" class="relative">
-                            <button 
-                                @click="open = !open"
-                                @click.outside="open = false"
-                                class="fluent-button-secondary flex items-center gap-2 px-2 py-1 rounded hover:bg-fluent-neutral-8"
-                            >
-                                <x-fluent-avatar 
-                                    :name="$user->name ?? $user->username"
-                                    :image="'https://www.gravatar.com/avatar/' . md5(strtolower(trim($user->email ?? ''))) . '?s=32&d=mp'"
-                                    size="small"
-                                />
-                                <span class="text-sm hidden md:inline">{{ $user->name ?? $user->username }}</span>
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" class="transition-transform" :class="{ 'rotate-180': open }">
-                                    <path d="M2.5 4.5L6 8l3.5-3.5"/>
-                                </svg>
-                            </button>
+            <div class="flex items-center gap-2">
+                <button class="fluent-command-button hidden lg:flex items-center" disabled>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="text-xs uppercase tracking-wide">Search</span>
+                </button>
 
-                            <!-- Dropdown Menu -->
-                            <div 
-                                x-show="open"
-                                x-transition:enter="transition ease-out duration-100"
-                                x-transition:enter-start="opacity-0 scale-95"
-                                x-transition:enter-end="opacity-100 scale-100"
-                                x-transition:leave="transition ease-in duration-75"
-                                x-transition:leave-start="opacity-100 scale-100"
-                                x-transition:leave-end="opacity-0 scale-95"
-                                class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-fluent-shadow-16 border border-fluent-neutral-14 py-2 z-50"
-                                style="display: none;"
-                            >
-                                <div class="px-4 py-3 border-b border-fluent-neutral-10">
-                                    <p class="text-sm font-semibold text-fluent-neutral-30">{{ $user->name ?? $user->username }}</p>
-                                    <p class="text-xs text-fluent-neutral-26 mt-0.5">{{ $user->email }}</p>
-                                </div>
-                                
-                                <a href="{{ route('users.profile') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-fluent-neutral-30 hover:bg-fluent-neutral-8 transition-colors">
-                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                                        <path d="M8 8a3 3 0 100-6 3 3 0 000 6zm2 1a5 5 0 00-4 0A5.002 5.002 0 003 14h10a5.002 5.002 0 00-3-5z"/>
-                                    </svg>
-                                    My Profile
-                                </a>
-                                
-                                <div class="border-t border-fluent-neutral-10 my-1"></div>
-                                
-                                <form method="POST" action="{{ route('logout') }}" class="block">
-                                    @csrf
-                                    <button type="submit" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-fluent-error hover:bg-red-50 transition-colors">
-                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v8a1 1 0 001 1h4a1 1 0 110 2H3a3 3 0 01-3-3V4a3 3 0 013-3h4a1 1 0 110 2H3zm9.293 3.293a1 1 0 011.414 0l2 2a1 1 0 010 1.414l-2 2a1 1 0 01-1.414-1.414L12.586 10H7a1 1 0 110-2h5.586l-.293-.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                        </svg>
-                                        Sign Out
-                                    </button>
-                                </form>
+                @auth
+                    <div x-data="{ open: false }" class="relative">
+                        <button
+                            @click="open = !open"
+                            @click.outside="open = false"
+                            class="fluent-command-button px-3"
+                        >
+                            <x-fluent-avatar 
+                                :name="$user->name ?? $user->username"
+                                :image="'https://www.gravatar.com/avatar/' . md5(strtolower(trim($user->email ?? ''))) . '?s=32&d=mp'"
+                                size="small"
+                            />
+                            <span class="text-sm hidden md:inline">{{ $user->name ?? $user->username }}</span>
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" class="transition-transform" :class="{ 'rotate-180': open }">
+                                <path d="M2.5 4.5L6 8l3.5-3.5"/>
+                            </svg>
+                        </button>
+
+                        <div
+                            x-show="open"
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-depth16 border border-fluent-neutral-14 py-2 z-50"
+                            style="display: none;"
+                        >
+                            <div class="px-4 py-3 border-b border-fluent-neutral-10">
+                                <p class="text-sm font-semibold text-fluent-neutral-30">{{ $user->name ?? $user->username }}</p>
+                                <p class="text-xs text-fluent-neutral-26 mt-0.5">{{ $user->email }}</p>
                             </div>
+
+                            <a href="{{ route('users.profile') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-fluent-neutral-30 hover:bg-fluent-neutral-8 transition-colors">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M8 8a3 3 0 100-6 3 3 0 000 6zm2 1a5 5 0 00-4 0A5.002 5.002 0 003 14h10a5.002 5.002 0 00-3-5z"/>
+                                </svg>
+                                My Profile
+                            </a>
+
+                            <div class="border-t border-fluent-neutral-10 my-1"></div>
+
+                            <form method="POST" action="{{ route('logout') }}" class="block">
+                                @csrf
+                                <button type="submit" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-fluent-error hover:bg-red-50 transition-colors">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v8a1 1 0 001 1h4a1 1 0 110 2H3a3 3 0 01-3-3V4a3 3 0 013-3h4a1 1 0 110 2H3zm9.293 3.293a1 1 0 011.414 0l2 2a1 1 0 010 1.414l-2 2a1 1 0 11-1.414-1.414L12.586 10H7a1 1 0 110-2h5.586l-.293-.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Sign Out
+                                </button>
+                            </form>
                         </div>
-                    @endauth
-                </div>
+                    </div>
+                @endauth
             </div>
         </div>
 
         <!-- Main Content Area with Sidebar -->
         <div class="flex-1 flex overflow-hidden">
             <!-- Left Navigation Rail -->
-            <nav 
-                class="fluent-nav-rail bg-fluent-neutral-6 border-r border-fluent-neutral-14 transition-all duration-200 flex-shrink-0 overflow-y-auto"
-                :class="sidebarExpanded ? 'w-56' : 'w-12'"
+            <nav
+                class="fluent-nav-rail flex-shrink-0 overflow-y-auto"
+                :class="$store.navigation.sidebarExpanded ? 'expanded' : ''"
             >
                 <div class="py-2 px-1.5">
                     @foreach($sidebarMenu as $item)
@@ -187,16 +180,16 @@
             </nav>
 
             <!-- Main Content Area -->
-            <main class="flex-1 overflow-y-auto bg-fluent-neutral-6">
+            <main class="fluent-page">
                 <!-- Breadcrumb / Page Header -->
-                <div class="bg-white border-b border-fluent-neutral-14 px-6 py-3">
+                <div class="fluent-page-header">
                     @isset($header)
                         {{ $header }}
                     @else
                         <div class="flex items-center justify-between">
                             <div>
                                 <h1 class="text-xl font-semibold text-fluent-neutral-30">@yield('page_title', 'Dashboard')</h1>
-                                <nav class="flex items-center gap-2 text-xs text-fluent-neutral-26 mt-1">
+                                <nav class="fluent-breadcrumb mt-1">
                                     <a href="{{ route('dashboard') }}" class="hover:text-fluent-brand-60 transition-colors">Home</a>
                                     <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" class="opacity-50">
                                         <path d="M4.5 3L7.5 6L4.5 9"/>
@@ -210,7 +203,7 @@
                 </div>
 
                 <!-- Page Content -->
-                <div id="mainContent" class="p-6 fluent-fade-in">
+                <div id="mainContent" class="fluent-page-content fluent-fade-in">
                     @if(session('status'))
                         <div class="fluent-card bg-green-50 border-green-200 mb-4 p-4" role="alert">
                             <div class="flex items-start gap-3">
@@ -237,7 +230,7 @@
                 </div>
 
                 <!-- Footer -->
-                <footer class="border-t border-fluent-neutral-14 bg-white px-6 py-3 mt-auto">
+                <footer class="fluent-footer mt-auto">
                     <div class="flex items-center justify-between text-xs text-fluent-neutral-26">
                         <p>&copy; {{ now()->year }} {{ config('app.name', 'Portal') }}. All rights reserved.</p>
                         <p><span class="font-semibold">Version</span> 1.0.0</p>

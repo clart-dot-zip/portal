@@ -15,7 +15,7 @@ $paddingClasses = [
     'normal' => 'p-6',
     'large' => 'p-8',
 ];
-$hoverClass = $hover ? 'hover:shadow-fluent-shadow-8 hover:-translate-y-0.5 cursor-pointer' : '';
+$hoverClass = $hover ? 'hover:shadow-depth8 hover:-translate-y-0.5 cursor-pointer' : '';
 $classes = $baseClasses . ' ' . $hoverClass;
 @endphp
 
