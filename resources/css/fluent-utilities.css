@@ -1,0 +1,388 @@
+/* Fluent UI Utility Classes - Quick Reference */
+
+/* TYPOGRAPHY */
+.fluent-caption       { font-size: 12px; line-height: 1.5; }
+.fluent-body          { font-size: 14px; line-height: 1.5; }
+.fluent-subtitle      { font-size: 16px; line-height: 1.5; }
+.fluent-title         { font-size: 20px; line-height: 1.2; }
+.fluent-display       { font-size: 28px; line-height: 1.2; }
+
+/* COLORS - Text */
+.text-fluent-brand    { color: var(--color-brand); }
+.text-fluent-success  { color: var(--color-success); }
+.text-fluent-error    { color: var(--color-error); }
+.text-fluent-warning  { color: var(--color-warning); }
+.text-fluent-info     { color: var(--color-info); }
+
+/* COLORS - Background */
+.bg-fluent-brand      { background-color: var(--color-brand); }
+.bg-fluent-success    { background-color: var(--color-success); }
+.bg-fluent-error      { background-color: var(--color-error); }
+.bg-fluent-warning    { background-color: var(--color-warning); }
+
+/* ELEVATIONS (Shadows) */
+.fluent-depth-4       { box-shadow: var(--shadow-4); }
+.fluent-depth-8       { box-shadow: var(--shadow-8); }
+.fluent-depth-16      { box-shadow: var(--shadow-16); }
+.fluent-depth-64      { box-shadow: var(--shadow-64); }
+
+/* ANIMATIONS */
+.fluent-fade-in       { animation: fadeIn var(--duration-normal) var(--curve-decelerate) forwards; }
+.fluent-fade-in-up    { animation: fadeInUp var(--duration-normal) var(--curve-decelerate) forwards; }
+.fluent-slide-in-right { animation: slideInRight var(--duration-normal) var(--curve-decelerate) forwards; }
+
+/* COMPONENT CLASSES */
+
+/* Buttons */
+.fluent-button {
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    transition: all var(--duration-fast) var(--curve-standard);
+}
+
+/* Cards */
+.fluent-card {
+    background: white;
+    border: 1px solid var(--color-neutral-10);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-8);
+}
+
+/* Badges */
+.fluent-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Tables */
+.fluent-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.fluent-table thead {
+    background: var(--color-neutral-6);
+    border-bottom: 2px solid var(--color-neutral-10);
+}
+
+.fluent-table th {
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--color-neutral-26);
+    text-align: left;
+}
+
+.fluent-table tbody tr {
+    border-bottom: 1px solid var(--color-neutral-10);
+    transition: background-color var(--duration-fast);
+}
+
+.fluent-table tbody tr:hover {
+    background-color: var(--color-neutral-6);
+}
+
+/* Forms */
+.fluent-input {
+    padding: 8px 12px;
+    border: 1px solid var(--color-neutral-14);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    transition: border-color var(--duration-fast);
+}
+
+.fluent-input:focus {
+    outline: none;
+    border-color: var(--color-brand);
+    box-shadow: 0 0 0 1px var(--color-brand);
+}
+
+/* DASHBOARD SPECIFIC */
+
+/* Stat Cards */
+.fluent-stat-card {
+    background: white;
+    border: 1px solid var(--color-neutral-10);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-8);
+    transition: all var(--duration-fast);
+}
+
+.fluent-stat-card:hover {
+    box-shadow: var(--shadow-16);
+    transform: translateY(-2px);
+}
+
+.fluent-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.fluent-stat-icon.brand {
+    background: linear-gradient(135deg, #0078d4 0%, #004578 100%);
+    color: white;
+}
+
+.fluent-stat-icon.success {
+    background: linear-gradient(135deg, #107c10 0%, #094509 100%);
+    color: white;
+}
+
+.fluent-stat-icon.error {
+    background: linear-gradient(135deg, #d13438 0%, #8b1f22 100%);
+    color: white;
+}
+
+.fluent-stat-value {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--color-neutral-30);
+    line-height: 1.2;
+    margin-bottom: 4px;
+}
+
+.fluent-stat-label {
+    font-size: 14px;
+    color: var(--color-neutral-26);
+}
+
+/* Info Boxes */
+.fluent-info-box {
+    background: white;
+    border: 1px solid var(--color-neutral-10);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--shadow-8);
+}
+
+.fluent-info-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--color-brand-10);
+    color: var(--color-brand-60);
+}
+
+.fluent-info-content {
+    flex: 1;
+}
+
+.fluent-info-label {
+    font-size: 12px;
+    color: var(--color-neutral-26);
+    margin-bottom: 4px;
+}
+
+.fluent-info-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--color-neutral-30);
+}
+
+/* Chart Containers */
+.fluent-chart-container {
+    background: white;
+    border: 1px solid var(--color-neutral-10);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-8);
+}
+
+.fluent-chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.fluent-chart-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-neutral-30);
+}
+
+.fluent-chart-canvas {
+    position: relative;
+    min-height: 260px;
+}
+
+/* Quick Action Tiles */
+.fluent-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.fluent-action-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    background: white;
+    border: 1px solid var(--color-neutral-10);
+    border-radius: var(--radius-lg);
+    transition: all var(--duration-fast);
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--color-neutral-30);
+}
+
+.fluent-action-tile:hover {
+    background: var(--color-neutral-6);
+    border-color: var(--color-brand);
+    box-shadow: var(--shadow-8);
+    transform: translateY(-2px);
+}
+
+.fluent-action-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    background: var(--color-brand-10);
+    color: var(--color-brand-60);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fluent-action-label {
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* NAVIGATION */
+
+/* Command Bar */
+.fluent-command-bar {
+    height: 48px;
+    background: white;
+    border-bottom: 1px solid var(--color-neutral-10);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+}
+
+/* Navigation Rail */
+.fluent-nav-rail {
+    width: 48px;
+    background: var(--color-neutral-8);
+    border-right: 1px solid var(--color-neutral-10);
+    transition: width var(--duration-slow) var(--curve-decelerate);
+}
+
+.fluent-nav-rail.expanded {
+    width: 224px;
+}
+
+.fluent-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: var(--color-neutral-30);
+    text-decoration: none;
+    transition: background-color var(--duration-fast);
+}
+
+.fluent-nav-item:hover {
+    background: var(--color-neutral-10);
+}
+
+.fluent-nav-item.active {
+    background: var(--color-brand-10);
+    color: var(--color-brand-60);
+    border-left: 3px solid var(--color-brand-60);
+}
+
+/* UTILITIES */
+
+/* Loading Overlay */
+.fluent-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+/* Toast */
+.fluent-toast {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    min-width: 300px;
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-64);
+    padding: 16px;
+    display: flex;
+    align-items: start;
+    gap: 12px;
+    z-index: 10000;
+    animation: slideInRight var(--duration-normal) var(--curve-decelerate);
+}
+
+/* Scrollbar */
+.fluent-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.fluent-scrollbar::-webkit-scrollbar-track {
+    background: var(--color-neutral-8);
+}
+
+.fluent-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--color-neutral-18);
+    border-radius: 4px;
+}
+
+.fluent-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--color-neutral-22);
+}
+
+/* RESPONSIVE HELPERS */
+
+@media (max-width: 768px) {
+    .fluent-nav-rail {
+        width: 48px;
+    }
+    
+    .fluent-stat-value {
+        font-size: 24px;
+    }
+    
+    .fluent-quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

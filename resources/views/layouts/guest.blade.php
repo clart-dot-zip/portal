@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,22 +11,32 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
 </head>
-<body class="hold-transition login-page" style="min-height: 100vh;">
-    <div class="login-box">
-        <div class="login-logo">
-            <a href="{{ route('welcome') }}">
-                <b>{{ config('app.name', 'Portal') }}</b>
+<body class="h-full bg-fluent-neutral-8 flex items-center justify-center">
+    <div class="w-full max-w-md p-6">
+        {{-- Microsoft-style Logo --}}
+        <div class="text-center mb-8">
+            <a href="{{ route('welcome') }}" class="inline-block">
+                <img src="{{ asset('images/clart.png') }}" alt="{{ config('app.name', 'Portal') }}" class="w-16 h-16 mx-auto mb-3">
+                <h1 class="text-2xl font-semibold text-fluent-neutral-30">{{ config('app.name', 'Portal') }}</h1>
             </a>
         </div>
 
-        <div class="card">
-            <div class="card-body login-card-body">
+        {{-- Login Card --}}
+        <div class="fluent-card bg-white">
+            <div class="p-8">
                 @hasSection('content')
                     @yield('content')
                 @else
                     {{ $slot ?? '' }}
                 @endif
             </div>
+        </div>
+
+        {{-- Footer Links --}}
+        <div class="text-center mt-6">
+            <p class="text-xs text-fluent-neutral-26">
+                &copy; {{ now()->year }} {{ config('app.name', 'Portal') }}. All rights reserved.
+            </p>
         </div>
     </div>
 

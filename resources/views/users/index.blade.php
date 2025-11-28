@@ -1,291 +1,313 @@
 @section('title', 'Users Management - ' . config('app.name'))
+@section('page_title', 'Users Management')
 
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-                <h1 class="h4 text-dark mb-1">{{ __('Users Management') }}</h1>
-                <p class="text-muted mb-0">{{ __('Manage Authentik directory users') }}</p>
+                <h1 class="text-xl font-semibold text-fluent-neutral-30">{{ __('Users Management') }}</h1>
+                <p class="text-sm text-fluent-neutral-26 mt-1">{{ __('Manage Authentik directory users') }}</p>
             </div>
-            <div class="btn-toolbar mt-3 mt-md-0" role="toolbar">
-                <div class="btn-group mr-2" role="group">
-                    <a href="{{ route('users.onboard') }}" class="btn btn-portal-primary">
-                        <i class="fas fa-user-plus mr-2"></i> {{ __('Onboard User') }}
-                    </a>
-                </div>
-                <div class="btn-group" role="group">
-                    <button id="sync-users-btn" type="button" class="btn btn-outline-secondary">
-                        <span id="sync-spinner" class="spinner-border spinner-border-sm mr-2 d-none" role="status" aria-hidden="true"></span>
-                        <i id="sync-icon" class="fas fa-sync mr-2"></i>
-                        <span id="sync-text">{{ __('Sync Users') }}</span>
-                    </button>
-                </div>
+            <div class="flex items-center gap-2">
+                <x-fluent-button variant="primary" onclick="window.location.href='{{ route('users.onboard') }}'">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 2a1 1 0 011 1v4h4a1 1 0 110 2H9v4a1 1 0 11-2 0V9H3a1 1 0 110-2h4V3a1 1 0 011-1z"/>
+                    </svg>
+                    {{ __('Onboard User') }}
+                </x-fluent-button>
+                <x-fluent-button variant="secondary" id="sync-users-btn">
+                    <svg id="sync-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 2a1 1 0 011 1v1.586a6 6 0 019.201 2.414 1 1 0 11-1.885.666 4 4 0 00-6.316-1.1V9a1 1 0 01-2 0V3a1 1 0 011-1zm.006 7.046a1 1 0 011.276.61 4 4 0 006.316 1.1V7a1 1 0 112 0v6a1 1 0 01-1 1h-.058a6 6 0 01-9.143-2.414 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                    </svg>
+                    <span id="sync-text">{{ __('Sync Users') }}</span>
+                </x-fluent-button>
             </div>
         </div>
     </x-slot>
 
-    <div class="row">
-        <div class="col-12">
-            
-            <!-- Status Messages -->
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            @endif
+    @if(session('success'))
+        <x-fluent-card padding="small" class="bg-green-50 border-green-200 mb-4">
+            <div class="flex items-start gap-3">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" class="text-fluent-success flex-shrink-0">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <p class="text-sm font-medium text-fluent-success flex-1">{{ session('success') }}</p>
+                <button onclick="this.parentElement.parentElement.remove()" class="text-green-600 hover:text-green-800">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8.707 8l3.647-3.646a.5.5 0 00-.708-.708L8 7.293 4.354 3.646a.5.5 0 10-.708.708L7.293 8l-3.647 3.646a.5.5 0 00.708.708L8 8.707l3.646 3.647a.5.5 0 00.708-.708L8.707 8z"/>
+                    </svg>
+                </button>
+            </div>
+        </x-fluent-card>
+    @endif
 
-            @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    {{ session('error') }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            @endif
+    @if(session('error') || isset($error))
+        <x-fluent-card padding="small" class="bg-red-50 border-red-200 mb-4">
+            <div class="flex items-start gap-3">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" class="text-fluent-error flex-shrink-0">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                <p class="text-sm font-medium text-fluent-error flex-1">{{ session('error') ?? $error ?? '' }}</p>
+                <button onclick="this.parentElement.parentElement.remove()" class="text-red-600 hover:text-red-800">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8.707 8l3.647-3.646a.5.5 0 00-.708-.708L8 7.293 4.354 3.646a.5.5 0 10-.708.708L7.293 8l-3.647 3.646a.5.5 0 00.708.708L8 8.707l3.646 3.647a.5.5 0 00.708-.708L8.707 8z"/>
+                    </svg>
+                </button>
+            </div>
+        </x-fluent-card>
+    @endif
 
-            @if(isset($error))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    {{ $error }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            @endif
+    {{-- Search Card --}}
+    <x-fluent-card title="Directory Search" class="mb-4">
+        <form method="GET" action="{{ route('users.index') }}" class="flex flex-col md:flex-row gap-3 items-end">
+            <div class="flex-1">
+                <x-fluent-input
+                    type="text"
+                    id="search"
+                    name="search"
+                    :value="$search ?? ''"
+                    placeholder="{{ __('Search users by username, email, or name...') }}"
+                    icon='<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>'
+                />
+            </div>
+            <div class="flex gap-2">
+                <x-fluent-button type="submit" variant="primary">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                    </svg>
+                    {{ __('Search') }}
+                </x-fluent-button>
+                @if($search ?? false)
+                    <x-fluent-button variant="secondary" onclick="window.location.href='{{ route('users.index') }}'">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M8.707 8l3.647-3.646a.5.5 0 00-.708-.708L8 7.293 4.354 3.646a.5.5 0 10-.708.708L7.293 8l-3.647 3.646a.5.5 0 00.708.708L8 8.707l3.646 3.647a.5.5 0 00.708-.708L8.707 8z"/>
+                        </svg>
+                        {{ __('Clear') }}
+                    </x-fluent-button>
+                @endif
+            </div>
+        </form>
+    </x-fluent-card>
 
-            <!-- Search Form -->
-            <div class="card card-outline card-primary mb-4">
-                <div class="card-header">
-                    <h3 class="card-title mb-0">{{ __('Directory Search') }}</h3>
-                </div>
-                <div class="card-body">
-                    <form method="GET" action="{{ route('users.index') }}" class="form-row align-items-end">
-                        <div class="form-group col-md-8 col-lg-9 mb-2">
-                            <label for="search" class="sr-only">{{ __('Search users') }}</label>
-                            <input type="text"
-                                   id="search"
-                                   name="search"
-                                   value="{{ $search ?? '' }}"
-                                   placeholder="{{ __('Search users by username, email, or name...') }}"
-                                   class="form-control">
-                        </div>
-                        <div class="form-group col-auto mb-2">
-                            <button type="submit" class="btn btn-portal-primary">
-                                <i class="fas fa-search mr-2"></i>{{ __('Search') }}
-                            </button>
-                        </div>
-                        @if($search ?? false)
-                            <div class="form-group col-auto mb-2">
-                                <a href="{{ route('users.index') }}" class="btn btn-outline-secondary">
-                                    <i class="fas fa-times mr-2"></i>{{ __('Clear') }}
-                                </a>
-                            </div>
+    {{-- Users Table Card --}}
+    <x-fluent-card>
+        <x-slot name="header">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                    <h3 class="text-base font-semibold text-fluent-neutral-30">
+                        @if(isset($search) && $search)
+                            {{ __('Search Results for ":term"', ['term' => $search]) }}
+                        @else
+                            {{ __('All Users') }}
                         @endif
-                    </form>
+                    </h3>
+                    <p class="text-xs text-fluent-neutral-26 mt-0.5">
+                        @if(isset($pagination))
+                            {{ $pagination['total'] }} {{ __('total users') }}
+                        @else
+                            {{ $users->count() }} {{ __('records loaded') }}
+                        @endif
+                    </p>
+                </div>
+                <div class="flex gap-2">
+                    <x-fluent-badge variant="success" size="small">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 3a1 1 0 00-1.707-.707L5 5.586 3.707 4.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4A1 1 0 0010 3z" clip-rule="evenodd"/>
+                        </svg>
+                        {{ __('Synced Locally') }}
+                    </x-fluent-badge>
+                    <x-fluent-badge variant="warning" size="small">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                            <path fill-rule="evenodd" d="M6 2a4 4 0 100 8 4 4 0 000-8zM2 6a4 4 0 118 0 4 4 0 01-8 0zm4.5-1.5v2.293l1.354 1.353a.5.5 0 01-.708.708l-1.5-1.5A.5.5 0 015.5 7V4.5a.5.5 0 011 0z" clip-rule="evenodd"/>
+                        </svg>
+                        {{ __('Not Synced') }}
+                    </x-fluent-badge>
                 </div>
             </div>
+        </x-slot>
 
-            <!-- Users Table -->
-            <div class="card card-outline card-primary">
-                <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
-                    <div>
-                        <h3 class="card-title mb-0">
-                            @if(isset($search) && $search)
-                                {{ __('Search Results for ":term"', ['term' => $search]) }}
-                            @else
-                                {{ __('All Users') }}
-                            @endif
-                        </h3>
-                        <small class="text-muted">
-                            @if(isset($pagination))
-                                {{ $pagination['total'] }} {{ __('total users') }}
-                            @else
-                                {{ $users->count() }} {{ __('records loaded') }}
-                            @endif
-                        </small>
-                    </div>
-                    <div class="mt-3 mt-md-0">
-                        <span class="badge badge-success mr-2"><i class="fas fa-check-circle mr-1"></i>{{ __('Synced Locally') }}</span>
-                        <span class="badge badge-warning text-dark"><i class="fas fa-clock mr-1"></i>{{ __('Not Synced') }}</span>
+
+        @if($users->count() > 0)
+            <div class="overflow-x-auto -mx-6">
+                <table class="fluent-table">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3">{{ __('Status') }}</th>
+                            <th class="px-6 py-3">{{ __('Username') }}</th>
+                            <th class="px-6 py-3">{{ __('Name') }}</th>
+                            <th class="px-6 py-3">{{ __('Email') }}</th>
+                            <th class="px-6 py-3">{{ __('Active') }}</th>
+                            <th class="px-6 py-3">{{ __('Superuser') }}</th>
+                            <th class="px-6 py-3">{{ __('Portal Admin') }}</th>
+                            <th class="px-6 py-3">{{ __('Last Login') }}</th>
+                            <th class="px-6 py-3 text-right">{{ __('Actions') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($users as $user)
+                            <tr>
+                                <td class="px-6 py-3">
+                                    <x-fluent-badge 
+                                        :variant="$user['synced_locally'] ? 'success' : 'warning'" 
+                                        size="small"
+                                    >
+                                        {{ $user['synced_locally'] ? __('Synced') : __('Not Synced') }}
+                                    </x-fluent-badge>
+                                </td>
+                                <td class="px-6 py-3 font-semibold whitespace-nowrap">{{ $user['username'] }}</td>
+                                <td class="px-6 py-3">{{ $user['name'] ?: '-' }}</td>
+                                <td class="px-6 py-3">{{ $user['email'] ?: '-' }}</td>
+                                <td class="px-6 py-3">
+                                    <x-fluent-badge 
+                                        :variant="$user['is_active'] ? 'success' : 'error'" 
+                                        size="small"
+                                    >
+                                        {{ $user['is_active'] ? __('Active') : __('Inactive') }}
+                                    </x-fluent-badge>
+                                </td>
+                                <td class="px-6 py-3">
+                                    <x-fluent-badge 
+                                        :variant="$user['is_superuser'] ? 'brand' : 'neutral'" 
+                                        size="small"
+                                    >
+                                        {{ $user['is_superuser'] ? __('Yes') : __('No') }}
+                                    </x-fluent-badge>
+                                </td>
+                                <td class="px-6 py-3">
+                                    <div class="flex items-center gap-2">
+                                        <x-fluent-badge 
+                                            :variant="$user['is_portal_admin'] ? 'info' : 'neutral'" 
+                                            size="small"
+                                        >
+                                            {{ $user['is_portal_admin'] ? __('Admin') : __('User') }}
+                                        </x-fluent-badge>
+                                        <button 
+                                            class="toggle-admin-btn text-xs px-2 py-1 rounded {{ $user['is_portal_admin'] ? 'text-fluent-error hover:bg-red-50' : 'text-fluent-success hover:bg-green-50' }} transition-colors font-semibold"
+                                            data-user-id="{{ $user['id'] }}"
+                                            data-username="{{ $user['username'] }}"
+                                            data-is-admin="{{ $user['is_portal_admin'] ? 'true' : 'false' }}"
+                                        >
+                                            {{ $user['is_portal_admin'] ? __('Remove') : __('Grant') }}
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-3 text-fluent-neutral-26 text-sm">
+                                    {{ $user['last_login'] ? \Carbon\Carbon::parse($user['last_login'])->diffForHumans() : __('Never') }}
+                                </td>
+                                <td class="px-6 py-3 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-1">
+                                        <a href="{{ route('users.show', $user['id']) }}" class="p-2 text-fluent-brand-60 hover:bg-fluent-brand-10 rounded transition-colors" title="View">
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                                <path d="M8 3C4.5 3 1.5 5.5 1 8c.5 2.5 3.5 5 7 5s6.5-2.5 7-5c-.5-2.5-3.5-5-7-5zm0 8a3 3 0 110-6 3 3 0 010 6z"/>
+                                                <circle cx="8" cy="8" r="1.5"/>
+                                            </svg>
+                                        </a>
+                                        <a href="{{ route('users.edit', $user['id']) }}" class="p-2 text-yellow-600 hover:bg-yellow-50 rounded transition-colors" title="Edit">
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                                <path d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25a1.75 1.75 0 01.445-.758l8.61-8.61z"/>
+                                            </svg>
+                                        </a>
+                                        <button 
+                                            class="delete-user-btn p-2 text-fluent-error hover:bg-red-50 rounded transition-colors"
+                                            data-user-id="{{ $user['id'] }}"
+                                            data-username="{{ $user['username'] }}"
+                                            title="Delete"
+                                        >
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M6.5 1.5a.5.5 0 01.5-.5h2a.5.5 0 01.5.5V2h3a.5.5 0 010 1h-.5v9.5a1.5 1.5 0 01-1.5 1.5h-5A1.5 1.5 0 014 12.5V3h-.5a.5.5 0 010-1h3v-.5zM5.5 3v9.5a.5.5 0 00.5.5h4a.5.5 0 00.5-.5V3h-5zM7 5a.5.5 0 01.5.5v5a.5.5 0 01-1 0v-5A.5.5 0 017 5zm2 0a.5.5 0 01.5.5v5a.5.5 0 01-1 0v-5A.5.5 0 019 5z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            @if(isset($pagination) && $pagination['last_page'] > 1)
+                <div class="flex flex-col md:flex-row items-center justify-between gap-3 pt-4 border-t border-fluent-neutral-10">
+                    <p class="text-sm text-fluent-neutral-26">
+                        {{ __('Showing page :current of :last (:total users)', [
+                            'current' => $pagination['current_page'],
+                            'last' => $pagination['last_page'],
+                            'total' => $pagination['total'],
+                        ]) }}
+                    </p>
+                    <div class="flex gap-2">
+                        @if($pagination['current_page'] > 1)
+                            <x-fluent-button 
+                                variant="secondary" 
+                                size="small"
+                                onclick="window.location.href='{{ route('users.index', array_merge(request()->query(), ['page' => $pagination['current_page'] - 1])) }}'"
+                            >
+                                {{ __('Previous') }}
+                            </x-fluent-button>
+                        @endif
+                        @if($pagination['current_page'] < $pagination['last_page'])
+                            <x-fluent-button 
+                                variant="secondary" 
+                                size="small"
+                                onclick="window.location.href='{{ route('users.index', array_merge(request()->query(), ['page' => $pagination['current_page'] + 1])) }}'"
+                            >
+                                {{ __('Next') }}
+                            </x-fluent-button>
+                        @endif
                     </div>
                 </div>
-
-                <div class="card-body p-0">
-                    @if($users->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-hover table-striped mb-0 align-middle">
-                                <thead class="thead-light">
-                                    <tr>
-                                        <th scope="col">{{ __('Status') }}</th>
-                                        <th scope="col">{{ __('Username') }}</th>
-                                        <th scope="col">{{ __('Name') }}</th>
-                                        <th scope="col">{{ __('Email') }}</th>
-                                        <th scope="col">{{ __('Active') }}</th>
-                                        <th scope="col">{{ __('Superuser') }}</th>
-                                        <th scope="col">{{ __('Portal Admin') }}</th>
-                                        <th scope="col">{{ __('Last Login') }}</th>
-                                        <th scope="col" class="text-right">{{ __('Actions') }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($users as $user)
-                                        <tr>
-                                            <td>
-                                                <span class="badge badge-{{ $user['synced_locally'] ? 'success' : 'warning' }} text-uppercase">
-                                                    {{ $user['synced_locally'] ? __('Synced') : __('Not Synced') }}
-                                                </span>
-                                            </td>
-                                            <td class="text-nowrap font-weight-bold">{{ $user['username'] }}</td>
-                                            <td>{{ $user['name'] ?: '-' }}</td>
-                                            <td>{{ $user['email'] ?: '-' }}</td>
-                                            <td>
-                                                <span class="badge badge-{{ $user['is_active'] ? 'success' : 'danger' }}">
-                                                    {{ $user['is_active'] ? __('Active') : __('Inactive') }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-{{ $user['is_superuser'] ? 'primary' : 'secondary' }}">
-                                                    {{ $user['is_superuser'] ? __('Yes') : __('No') }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <span class="badge badge-{{ $user['is_portal_admin'] ? 'info' : 'secondary' }} mr-2">
-                                                        {{ $user['is_portal_admin'] ? __('Admin') : __('User') }}
-                                                    </span>
-                                                    <button class="btn btn-sm toggle-admin-btn {{ $user['is_portal_admin'] ? 'btn-outline-danger' : 'btn-outline-success' }}"
-                                                            data-user-id="{{ $user['id'] }}"
-                                                            data-username="{{ $user['username'] }}"
-                                                            data-is-admin="{{ $user['is_portal_admin'] ? 'true' : 'false' }}">
-                                                        {{ $user['is_portal_admin'] ? __('Remove') : __('Grant') }}
-                                                    </button>
-                                                </div>
-                                            </td>
-                                            <td class="text-muted">
-                                                {{ $user['last_login'] ? \Carbon\Carbon::parse($user['last_login'])->diffForHumans() : __('Never') }}
-                                            </td>
-                                            <td class="text-right text-nowrap">
-                                                <a href="{{ route('users.show', $user['id']) }}" class="btn btn-sm btn-primary">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                <a href="{{ route('users.edit', $user['id']) }}" class="btn btn-sm btn-warning text-white">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <button class="btn btn-sm btn-danger delete-user-btn"
-                                                        data-user-id="{{ $user['id'] }}"
-                                                        data-username="{{ $user['username'] }}">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-
-                        @if(isset($pagination) && $pagination['last_page'] > 1)
-                            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between p-3">
-                                <div class="text-muted small mb-2 mb-md-0">
-                                    {{ __('Showing page :current of :last (:total users)', [
-                                        'current' => $pagination['current_page'],
-                                        'last' => $pagination['last_page'],
-                                        'total' => $pagination['total'],
-                                    ]) }}
-                                </div>
-                                <div>
-                                    @if($pagination['current_page'] > 1)
-                                        <a href="{{ route('users.index', array_merge(request()->query(), ['page' => $pagination['current_page'] - 1])) }}" class="btn btn-outline-secondary btn-sm mr-2">
-                                            {{ __('Previous') }}
-                                        </a>
-                                    @endif
-                                    @if($pagination['current_page'] < $pagination['last_page'])
-                                        <a href="{{ route('users.index', array_merge(request()->query(), ['page' => $pagination['current_page'] + 1])) }}" class="btn btn-outline-secondary btn-sm">
-                                            {{ __('Next') }}
-                                        </a>
-                                    @endif
-                                </div>
-                            </div>
-                        @endif
+            @endif
+        @else
+            <div class="text-center py-12">
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="currentColor" class="mx-auto text-fluent-neutral-22 mb-4">
+                    <path d="M32 32a10 10 0 100-20 10 10 0 000 20zm0 4c-10.67 0-16 5.33-16 16h32c0-10.67-5.33-16-16-16z"/>
+                </svg>
+                <h5 class="text-lg font-semibold text-fluent-neutral-30 mb-2">{{ __('No users found') }}</h5>
+                <p class="text-sm text-fluent-neutral-26">
+                    @if(isset($search) && $search)
+                        {{ __('No users match your search criteria.') }}
                     @else
-                        <div class="text-center py-5">
-                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
-                            <h5>{{ __('No users found') }}</h5>
-                            <p class="text-muted mb-0">
-                                @if(isset($search) && $search)
-                                    {{ __('No users match your search criteria.') }}
-                                @else
-                                    {{ __('Click the "Sync Users" button to load users from Authentik.') }}
-                                @endif
-                            </p>
-                        </div>
+                        {{ __('Click the "Sync Users" button to load users from Authentik.') }}
                     @endif
-                </div>
+                </p>
             </div>
-        </div>
-    </div>
+        @endif
+    </x-fluent-card>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const userMessages = {
-                syncing: 'Syncing...',
-                syncUsers: 'Sync Users',
-                syncSuccess: 'Users synced successfully!',
-                syncFailed: 'Sync failed',
-                syncFailedPrefix: 'Sync failed:',
-                deleteConfirm: 'Are you sure you want to delete user ":username"? This action cannot be undone.',
-                deleteFailed: 'Failed to delete user',
-                deleteFailedPrefix: 'Failed to delete user:',
-                grantConfirm: 'Are you sure you want to grant Portal admin access to ":username"?',
-                removeConfirm: 'Are you sure you want to remove Portal admin access from ":username"?',
-                portalAdminFailed: 'Failed to :action Portal admin access',
-                portalAdminFailedPrefix: 'Failed to :action Portal admin access:'
-            };
             const syncBtn = document.getElementById('sync-users-btn');
-            const spinner = document.getElementById('sync-spinner');
             const syncIcon = document.getElementById('sync-icon');
             const syncText = document.getElementById('sync-text');
 
             if (syncBtn) {
                 syncBtn.addEventListener('click', function() {
                     syncBtn.disabled = true;
-                    spinner.classList.remove('d-none');
-                    syncIcon.classList.add('d-none');
-                    syncText.textContent = userMessages.syncing;
+                    syncIcon.classList.add('animate-spin');
+                    syncText.textContent = 'Syncing...';
 
                     fetch('{{ route("users.sync") }}', {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
                         }
                     })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                        }
-                        return response.json();
-                    })
+                    .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            showMessage(userMessages.syncSuccess, 'success');
+                            window.FluentUI.showToast(data.message || 'Users synced successfully!', 'success');
                             setTimeout(() => window.location.reload(), 1000);
                         } else {
-                            showMessage(data.message || userMessages.syncFailed, 'error');
+                            window.FluentUI.showToast(data.message || 'Sync failed', 'error');
                         }
                     })
                     .catch(error => {
-                        console.error('Sync error:', error);
-                        showMessage(`${userMessages.syncFailedPrefix} ${error.message}`, 'error');
+                        window.FluentUI.showToast('Sync failed: ' + error.message, 'error');
                     })
                     .finally(() => {
                         syncBtn.disabled = false;
-                        spinner.classList.add('d-none');
-                        syncIcon.classList.remove('d-none');
-                        syncText.textContent = userMessages.syncUsers;
+                        syncIcon.classList.remove('animate-spin');
+                        syncText.textContent = 'Sync Users';
                     });
                 });
             }
@@ -294,7 +316,34 @@
                 button.addEventListener('click', function() {
                     const userId = this.dataset.userId;
                     const username = this.dataset.username;
-                    deleteUser(userId, username);
+                    
+                    if (!confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
+                        return;
+                    }
+
+                    window.FluentUI.showLoading('Deleting user...');
+
+                    fetch(`{{ url('users') }}/${userId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        window.FluentUI.hideLoading();
+                        if (data.success) {
+                            window.FluentUI.showToast(data.message, 'success');
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            window.FluentUI.showToast(data.message || 'Failed to delete user', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        window.FluentUI.hideLoading();
+                        window.FluentUI.showToast('Failed to delete user: ' + error.message, 'error');
+                    });
                 });
             });
 
@@ -303,101 +352,37 @@
                     const userId = this.dataset.userId;
                     const username = this.dataset.username;
                     const isAdmin = this.dataset.isAdmin === 'true';
-                    togglePortalAdmin(userId, username, isAdmin);
+                    const action = isAdmin ? 'remove' : 'grant';
+                    
+                    if (!confirm(`Are you sure you want to ${action} Portal admin access for "${username}"?`)) {
+                        return;
+                    }
+
+                    window.FluentUI.showLoading(`${action === 'grant' ? 'Granting' : 'Removing'} admin access...`);
+
+                    fetch(`{{ url('users') }}/${userId}/toggle-admin`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        window.FluentUI.hideLoading();
+                        if (data.success) {
+                            window.FluentUI.showToast(data.message, 'success');
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            window.FluentUI.showToast(data.message || `Failed to ${action} admin access`, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        window.FluentUI.hideLoading();
+                        window.FluentUI.showToast(`Failed to ${action} admin access: ` + error.message, 'error');
+                    });
                 });
             });
-
-            function deleteUser(userId, username) {
-                if (!confirm(userMessages.deleteConfirm.replace(':username', username))) {
-                    return;
-                }
-
-                fetch(`{{ url('users') }}/${userId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        showMessage(data.message, 'success');
-                        setTimeout(() => window.location.reload(), 1000);
-                    } else {
-                        showMessage(data.message || userMessages.deleteFailed, 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Delete user error:', error);
-                    showMessage(`${userMessages.deleteFailedPrefix} ${error.message}`, 'error');
-                });
-            }
-
-            function togglePortalAdmin(userId, username, isCurrentlyAdmin) {
-                const action = isCurrentlyAdmin ? 'remove' : 'grant';
-                const actionText = isCurrentlyAdmin ? userMessages.removeConfirm : userMessages.grantConfirm;
-
-                if (!confirm(actionText.replace(':username', username))) {
-                    return;
-                }
-
-                fetch(`{{ url('users') }}/${userId}/toggle-admin`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        showMessage(data.message, 'success');
-                        setTimeout(() => window.location.reload(), 1000);
-                    } else {
-                        showMessage(data.message || userMessages.portalAdminFailed.replace(':action', action), 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Toggle Portal admin error:', error);
-                    showMessage(`${userMessages.portalAdminFailedPrefix.replace(':action', action)} ${error.message}`, 'error');
-                });
-            }
-
-            function showMessage(message, type) {
-                const toast = document.createElement('div');
-                toast.className = `toast text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
-                toast.style.position = 'fixed';
-                toast.style.top = '1rem';
-                toast.style.right = '1rem';
-                toast.style.zIndex = 2000;
-                toast.innerHTML = `
-                    <div class="d-flex align-items-center">
-                        <div class="toast-body">${message}</div>
-                        <button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>`;
-
-                document.body.appendChild(toast);
-                const toastInstance = new bootstrap.Toast(toast, { delay: 4000 });
-                toast.addEventListener('hidden.bs.toast', () => toast.remove());
-                toastInstance.show();
-            }
         });
     </script>
 </x-app-layout>
